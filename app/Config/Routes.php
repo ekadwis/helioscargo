@@ -21,6 +21,7 @@ $routes->post('/shipment/store', 'DashboardController::storeShipment');
 $routes->post('/shipment/delete/(:num)', 'DashboardController::deleteShipment/$1');
 $routes->get('/shipment-tracking', 'DashboardController::shipmentTracking');
 $routes->post('/shipment/updateTracking', 'DashboardController::updateTracking');
+$routes->post('/cek_ongkir', 'DashboardController::cek_ongkir');
 
 // Laporan Section 
 $routes->get('/laporan', 'DashboardController::laporan');

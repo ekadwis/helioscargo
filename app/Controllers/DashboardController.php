@@ -60,30 +60,60 @@ class DashboardController extends BaseController
     public function createCustomer()
     {
         $customerModel = new \App\Models\CustomerModel();
+        $db = \Config\Database::connect();
 
         if (!$this->validate([
-            'name' => 'required|min_length[3]',
-            'phone' => 'required|numeric',
-            'email' => 'permit_empty|valid_email',
-            'location_id' => 'required'
-        ])) {
+            'sender_name' => 'required|min_length[3]',
+            'sender_phone' => 'required|numeric',
+            'sender_email' => 'permit_empty|valid_email',
+            'sender_location_id' => 'required',
 
+            'receiver_name' => 'required|min_length[3]',
+            'receiver_phone' => 'required|numeric',
+            'receiver_email' => 'permit_empty|valid_email',
+            'receiver_location_id' => 'required',
+        ])) {
             return redirect()->back()->withInput()->with('error', $this->validator->getErrors());
         }
 
-        $data = [
-            'type' => $this->request->getPost('type'),
-            'name' => $this->request->getPost('name'),
-            'phone' => $this->request->getPost('phone'),
-            'email' => $this->request->getPost('email'),
-            'address' => $this->request->getPost('address'),
-            'location_id' => $this->request->getPost('location_id'),
-            'created_at' => date('Y-m-d H:i:s')
+        $senderData = [
+            'type'        => $this->request->getPost('sender_type'),
+            'name'        => $this->request->getPost('sender_name'),
+            'phone'       => $this->request->getPost('sender_phone'),
+            'email'       => $this->request->getPost('sender_email'),
+            'address'     => $this->request->getPost('sender_address'),
+            'location_id' => $this->request->getPost('sender_location_id'),
+            'created_at'  => date('Y-m-d H:i:s')
         ];
 
-        $customerModel->insert($data);
+        $receiverData = [
+            'type'        => $this->request->getPost('receiver_type'),
+            'name'        => $this->request->getPost('receiver_name'),
+            'phone'       => $this->request->getPost('receiver_phone'),
+            'email'       => $this->request->getPost('receiver_email'),
+            'address'     => $this->request->getPost('receiver_address'),
+            'location_id' => $this->request->getPost('receiver_location_id'),
+            'created_at'  => date('Y-m-d H:i:s')
+        ];
 
-        return redirect()->back()->with('success', 'Pelanggan berhasil ditambahkan');
+        $db->transBegin();
+
+        $insertSender = $customerModel->insert($senderData);
+        $insertReceiver = $customerModel->insert($receiverData);
+
+        if (!$insertSender || !$insertReceiver) {
+            $db->transRollback();
+            return redirect()->back()->withInput()->with('error', ['Salah satu data gagal disimpan, jadi semua dibatalkan.']);
+        }
+
+        if ($db->transStatus() === false) {
+            $db->transRollback();
+            return redirect()->back()->withInput()->with('error', ['Terjadi kesalahan saat menyimpan data.']);
+        }
+
+        $db->transCommit();
+
+        return redirect()->back()->with('success', 'Pengirim dan penerima berhasil ditambahkan.');
     }
 
     public function updateCustomer()
@@ -280,6 +310,51 @@ class DashboardController extends BaseController
             ->update(['current_status' => $status]);
 
         return redirect()->back()->with('success', 'Tracking berhasil diupdate');
+    }
+
+    public function cek_ongkir()
+    {
+        $service = $this->request->getPost('service');
+        $berat   = (float) $this->request->getPost('berat');
+    
+        if (!$service || !$berat) {
+            return $this->response->setJSON([
+                'error' => 'Service dan berat wajib diisi'
+            ]);
+        }
+    
+        $berat = ceil($berat);
+    
+        // Range harga berdasarkan service
+        switch ($service) {
+            case 'economy':
+                $min = 10000;
+                $max = 20000;
+                break;
+            case 'regular':
+                $min = 15000;
+                $max = 25000;
+                break;
+            case 'express':
+                $min = 20000;
+                $max = 35000;
+                break;
+            default:
+                $min = 10000;
+                $max = 15000;
+        }
+    
+        // Random + pembulatan
+        $harga = rand($min, $max);
+        $harga = round($harga / 500) * 500;
+    
+        $total = $harga * $berat;
+    
+        return $this->response->setJSON([
+            'harga_per_kg' => $harga,
+            'berat'        => $berat,
+            'total'        => $total
+        ]);
     }
 
     // Laporan Section

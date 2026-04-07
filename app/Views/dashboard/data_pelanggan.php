@@ -122,7 +122,7 @@
 
 <!-- Modal Tambah Pelanggan -->
 <div class="modal fade" id="modalTambahPelanggan" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -135,53 +135,98 @@
                 <form action="<?= base_url('pelanggan/create') ?>" method="post">
                     <?= csrf_field(); ?>
 
-                    <div class="row">
+                    <!-- INPUT PENGIRIM -->
+                    <div class="border rounded p-3 mb-4">
+                        <h5 class="mb-3">Input Pengirim</h5>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama Pelanggan</label>
-                            <input type="text" name="name" class="form-control" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Pelanggan</label>
+                                <input type="text" name="sender_name" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tipe</label>
+                                <select name="sender_type" class="form-select">
+                                    <option value="Perusahaan">Perusahaan</option>
+                                    <option value="Perorangan">Individu</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="sender_email" class="form-control">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telepon</label>
+                                <input type="text" name="sender_phone" class="form-control">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Alamat</label>
+                                <textarea name="sender_address" class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Lokasi</label>
+                                <select name="sender_location_id" class="form-select">
+                                    <option value="">Pilih lokasi...</option>
+                                    <option value="6">Jakarta Selatan</option>
+                                    <option value="7">Bandung</option>
+                                    <option value="8">Surabaya</option>
+                                    <option value="9">Yogyakarta</option>
+                                    <option value="10">Medan</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Tipe</label>
-                            <select name="type" class="form-select">
-                                <option value="Perusahaan">Perusahaan</option>
-                                <option value="Perorangan">Individu</option>
-                            </select>
+                    <!-- INPUT PENERIMA -->
+                    <div class="border rounded p-3 mb-3">
+                        <h5 class="mb-3">Input Penerima</h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Pelanggan</label>
+                                <input type="text" name="receiver_name" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tipe</label>
+                                <select name="receiver_type" class="form-select">
+                                    <option value="Perusahaan">Perusahaan</option>
+                                    <option value="Perorangan">Individu</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="receiver_email" class="form-control">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telepon</label>
+                                <input type="text" name="receiver_phone" class="form-control">
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Alamat</label>
+                                <textarea name="receiver_address" class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Lokasi</label>
+                                <select name="receiver_location_id" class="form-select">
+                                    <option value="">Pilih lokasi...</option>
+                                    <option value="6">Jakarta Selatan</option>
+                                    <option value="7">Bandung</option>
+                                    <option value="8">Surabaya</option>
+                                    <option value="9">Yogyakarta</option>
+                                    <option value="10">Medan</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Telepon</label>
-                            <input type="text" name="phone" class="form-control">
-                        </div>
-
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea name="address" class="form-control" rows="2"></textarea>
-                        </div>
-
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Lokasi</label>
-
-                            <select id="locationSelect" name="location_id" class="form-select">
-
-                                <option value="">Pilih lokasi...</option>
-
-                                <option value="6">Jakarta Selatan</option>
-                                <option value="7">Bandung</option>
-                                <option value="8">Surabaya</option>
-                                <option value="9">Yogyakarta</option>
-                                <option value="10">Medan</option>
-
-                            </select>
-
-                        </div>
-
                     </div>
 
                     <div class="text-end">
@@ -190,7 +235,7 @@
                         </button>
 
                         <button type="submit" class="btn btn-primary">
-                            Simpan Pelanggan
+                            Simpan Pengirim & Penerima
                         </button>
                     </div>
 

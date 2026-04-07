@@ -211,11 +211,13 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Service</label>
-                            <select name="service_id" class="form-control" required>
+                            <select name="service_id" id="service_id" class="form-control" required>
                                 <option value="">-- Pilih Service --</option>
                                 <?php foreach ($services as $service) : ?>
-                                    <option value="<?= $service['id'] ?>">
-                                        <?= esc($service['name']) ?> (<?= esc($service['sla_days_min']) ?>-<?= esc($service['sla_days_max']) ?> hari)
+                                    <option value="<?= $service['id'] ?>" data-name="<?= strtolower($service['name']) ?>">
+
+                                        <?= esc($service['name']) ?>
+                                        (<?= esc($service['sla_days_min']) ?>-<?= esc($service['sla_days_max']) ?> hari)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -238,7 +240,7 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Berat (kg)</label>
-                            <input type="number" step="0.01" name="weight_kg" class="form-control" required>
+                            <input type="number" step="0.01" name="weight_kg" id="weight_kg" class="form-control" required>
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -263,7 +265,9 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Ongkir</label>
-                            <input type="number" step="0.01" name="shipping_fee" class="form-control" value="0" required>
+                            <input type="number" step="0.01" name="shipping_fee" id="shipping_fee" class="form-control" value="0" readonly required>
+
+                            <small id="ongkirPreview" class="text-muted"></small>
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -331,6 +335,46 @@
 
         createPagination(visibleRows.length);
     }
+
+    $('#ongkirPreview').html('Menghitung...');
+
+    function hitungOngkir() {
+
+        let service = $('#service_id option:selected').data('name');
+        let berat = $('#weight_kg').val();
+
+        console.log(service, berat);
+
+        if (!service || !berat) return;
+
+        $.ajax({
+    url: '/cek_ongkir',
+    method: 'POST',
+    data: {
+        service: service,
+        berat: berat
+    },
+    success: function(res) {
+
+        console.log(res); // DEBUG
+
+        $('#shipping_fee').val(res.total);
+
+        $('#ongkirPreview').html(`
+            Harga/kg : Rp ${res.harga_per_kg.toLocaleString()} <br>
+            Total    : <b>Rp ${res.total.toLocaleString()}</b>
+        `);
+    },
+    error: function(xhr) {
+        console.log(xhr.responseText);
+        alert('Error ongkir, cek console');
+    }
+});
+    }
+
+    $('#service_id, #weight_kg').on('change keyup', function() {
+        hitungOngkir();
+    });
 
     function createPagination(totalData) {
         pagination.innerHTML = "";

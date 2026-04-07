@@ -70,26 +70,6 @@
   <div class="stat-card">
 
     <div class="stat-header">
-      <div class="stat-icon green">
-        <i class="bi bi-currency-dollar"></i>
-      </div>
-      <span class="stat-trend up">+23%</span>
-    </div>
-
-    <div class="stat-value">
-      Rp 245M
-    </div>
-
-    <div class="stat-label">
-      Pendapatan Bulan Ini
-    </div>
-
-  </div>
-
-
-  <div class="stat-card">
-
-    <div class="stat-header">
       <div class="stat-icon purple">
         <i class="bi bi-truck"></i>
       </div>
