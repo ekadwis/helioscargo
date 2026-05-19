@@ -87,10 +87,10 @@
                     if (is_array($errorData)) :
                         foreach ($errorData as $err) :
                     ?>
-                            <div><?= esc($err) ?></div>
+                            <div><?= ($err) ?></div>
                         <?php endforeach; ?>
                     <?php else : ?>
-                        <div><?= esc($errorData) ?></div>
+                        <div><?= ($errorData) ?></div>
                     <?php endif; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -98,7 +98,7 @@
 
             <?php if (session()->getFlashdata('success')) : ?>
                 <div class="alert alert-success alert-dismissible fade show auto-alert" role="alert">
-                    <?= esc(session()->getFlashdata('success')) ?>
+                    <?= (session()->getFlashdata('success')) ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <?php endif; ?>

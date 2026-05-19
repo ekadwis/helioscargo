@@ -15,17 +15,18 @@
         <div class="card-body">
 
             <?php if (session()->getFlashdata('error')) : ?>
-
                 <div class="alert alert-danger alert-dismissible fade show auto-alert" role="alert">
-
-                    <?php foreach (session()->getFlashdata('error') as $err) : ?>
-                        <div><?= $err ?></div>
-                    <?php endforeach; ?>
-
+                    <?php
+                    $errors = session()->getFlashdata('error');
+                    if (is_array($errors)) :
+                        foreach ($errors as $err) : ?>
+                            <div><?= $err ?></div>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <div><?= $errors ?></div>
+                    <?php endif; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-
                 </div>
-
             <?php endif; ?>
 
 
@@ -69,9 +70,9 @@
                             <?php foreach ($shipments as $shipment) : ?>
                                 <tr>
                                     <td><?= $no++ ?></td>
-                                    <td><strong><?= esc($shipment['awb']) ?></strong></td>
-                                    <td><?= esc($shipment['item_name']) ?></td>
-                                    <td><?= esc($shipment['qty']) ?></td>
+                                    <td><strong><?= ($shipment['awb']) ?></strong></td>
+                                    <td><?= ($shipment['item_name']) ?></td>
+                                    <td><?= ($shipment['qty']) ?></td>
                                     <td><?= number_format((float)$shipment['weight_kg'], 2) ?> kg</td>
                                     <td>
                                         <?= number_format((float)$shipment['length_cm'], 0) ?>x
@@ -91,16 +92,18 @@
                                         $status = $shipment['current_status'];
                                         $badgeClass = 'bg-secondary';
 
-                                        if ($status === 'DELIVERED') {
+                                        if ($status === 'picked_up' || $status === 'delivered') {
                                             $badgeClass = 'bg-success';
-                                        } elseif ($status === 'IN_TRANSIT') {
+                                        } elseif ($status === 'in_transit') {
                                             $badgeClass = 'bg-primary';
-                                        } elseif ($status === 'CREATED') {
+                                        } elseif ($status === 'draft' || $status === 'booked') {
                                             $badgeClass = 'bg-warning';
+                                        } elseif ($status === 'cancelled') {
+                                            $badgeClass = 'bg-danger';
                                         }
                                         ?>
                                         <span class="badge <?= $badgeClass ?>">
-                                            <?= esc(str_replace('_', ' ', $status)) ?>
+                                            <?= (str_replace('_', ' ', $status)) ?>
                                         </span>
                                     </td>
                                     <td><?= date('d-m-Y', strtotime($shipment['created_at'])) ?></td>
@@ -158,130 +161,175 @@
 
                 <div class="modal-body">
                     <div class="row">
-
+                        <!-- Pengirim -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Pengirim</label>
                             <select name="sender_customer_id" class="form-control" required>
                                 <option value="">-- Pilih Pengirim --</option>
                                 <?php foreach ($customers as $customer) : ?>
-                                    <option value="<?= $customer['id'] ?>">
-                                        <?= esc($customer['name']) ?>
-                                    </option>
+                                    <option value="<?= $customer['id'] ?>"><?= ($customer['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
+                        <!-- Penerima -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Penerima</label>
                             <select name="receiver_customer_id" class="form-control" required>
                                 <option value="">-- Pilih Penerima --</option>
                                 <?php foreach ($customers as $customer) : ?>
-                                    <option value="<?= $customer['id'] ?>">
-                                        <?= esc($customer['name']) ?>
+                                    <option value="<?= $customer['id'] ?>"><?= ($customer['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Lokasi Asal -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Lokasi Asal</label>
+                            <select name="origin_location_id" id="origin_location_id" class="form-control select2-location" required>
+                                <option value="">-- Cari lokasi asal --</option>
+                                <?php foreach ($locations as $location) : ?>
+                                    <option value="<?= $location['id'] ?>">
+                                        <?= $location['kelurahan'] . ', ' . $location['kecamatan'] . ', ' . $location['kabupaten'] . ', ' . $location['provinsi'] . ' - ' . $location['kodepos'] ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Lokasi Asal</label>
-                            <input type="text" class="form-control location-search" list="originLocationList" placeholder="Cari lokasi asal..." autocomplete="off" required>
-                            <input type="hidden" name="origin_location_id" id="origin_location_id" required>
-
-                            <datalist id="originLocationList">
-                                <?php foreach ($locations as $location) : ?>
-                                    <option data-id="<?= $location['id'] ?>" value="<?= esc($location['kelurahan'] . ', ' . $location['kecamatan'] . ', ' . $location['kabupaten'] . ', ' . $location['provinsi'] . ' - ' . $location['kodepos']) ?>">
-                                    </option>
-                                <?php endforeach; ?>
-                            </datalist>
-                        </div>
-
+                        <!-- Lokasi Tujuan -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Lokasi Tujuan</label>
-                            <input type="text" class="form-control location-search" list="destinationLocationList" placeholder="Cari lokasi tujuan..." autocomplete="off" required>
-                            <input type="hidden" name="destination_location_id" id="destination_location_id" required>
-
-                            <datalist id="destinationLocationList">
+                            <select name="destination_location_id" id="destination_location_id" class="form-control select2-location" required>
+                                <option value="">-- Cari lokasi tujuan --</option>
                                 <?php foreach ($locations as $location) : ?>
-                                    <option data-id="<?= $location['id'] ?>" value="<?= esc($location['kelurahan'] . ', ' . $location['kecamatan'] . ', ' . $location['kabupaten'] . ', ' . $location['provinsi'] . ' - ' . $location['kodepos']) ?>">
+                                    <option value="<?= $location['id'] ?>">
+                                        <?= $location['kelurahan'] . ', ' . $location['kecamatan'] . ', ' . $location['kabupaten'] . ', ' . $location['provinsi'] . ' - ' . $location['kodepos'] ?>
                                     </option>
                                 <?php endforeach; ?>
-                            </datalist>
+                            </select>
                         </div>
-
+                        <!-- Service -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Service</label>
                             <select name="service_id" id="service_id" class="form-control" required>
                                 <option value="">-- Pilih Service --</option>
                                 <?php foreach ($services as $service) : ?>
                                     <option value="<?= $service['id'] ?>" data-name="<?= strtolower($service['name']) ?>">
+                                        <?= ($service['name']) ?> (<?= ($service['sla_days_min']) ?>-<?= ($service['sla_days_max']) ?> hari)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                                        <?= esc($service['name']) ?>
-                                        (<?= esc($service['sla_days_min']) ?>-<?= esc($service['sla_days_max']) ?> hari)
+                        <!-- Nama Barang -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nama Barang</label>
+                            <input type="text" name="item_name" class="form-control" required>
+                        </div>
+
+                        <!-- Deskripsi Barang -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Deskripsi Barang</label>
+                            <textarea name="item_desc" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <!-- Qty -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Qty</label>
+                            <input type="number" name="qty" class="form-control" min="1" required>
+                        </div>
+
+                        <!-- Berat (kg) -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Berat (kg)</label>
+                            <input type="number" step="0.01" name="weight_kg" id="weight_kg" class="form-control" required>
+                        </div>
+
+                        <!-- Panjang (cm) -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Panjang (cm)</label>
+                            <input type="number" step="0.01" name="length_cm" class="form-control" required>
+                        </div>
+
+                        <!-- Lebar (cm) -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Lebar (cm)</label>
+                            <input type="number" step="0.01" name="width_cm" class="form-control" required>
+                        </div>
+
+                        <!-- Tinggi (cm) -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tinggi (cm)</label>
+                            <input type="number" step="0.01" name="height_cm" class="form-control" required>
+                        </div>
+
+                        <!-- Ongkir -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Ongkir</label>
+                            <input type="number" step="0.01" name="shipping_fee" id="shipping_fee" class="form-control" value="0" readonly required>
+                            <small id="ongkirPreview" class="text-muted"></small>
+                        </div>
+
+                        <!-- Asuransi -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Asuransi</label>
+                            <input type="number" step="0.01" name="insurance_fee" class="form-control" value="0" required>
+                        </div>
+
+                        <!-- Fragile -->
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_fragile" value="1" id="is_fragile">
+                                <label class="form-check-label" for="is_fragile">Barang Fragile</label>
+                            </div>
+                        </div>
+
+                        <!-- Additional Fields -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Pickup Outlet</label>
+                            <select name="pickup_outlet_id" class="form-control" required>
+                                <option value="">-- Pilih Outlet Pickup --</option>
+                                <?php foreach ($outlets as $outlet) : ?>
+                                    <option value="<?= $outlet['id'] ?>">
+                                        <?= $outlet['name'] ?> (<?= ucfirst($outlet['type']) ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama Barang</label>
-                            <input type="text" name="item_name" class="form-control" required>
+                            <label class="form-label">Delivery Outlet</label>
+                            <select name="delivery_outlet_id" class="form-control" required>
+                                <option value="">-- Pilih Outlet Delivery --</option>
+                                <?php foreach ($outlets as $outlet) : ?>
+                                    <option value="<?= $outlet['id'] ?>">
+                                        <?= $outlet['name'] ?> (<?= ucfirst($outlet['type']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
 
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Deskripsi Barang</label>
-                            <textarea name="item_desc" class="form-control" rows="3"></textarea>
+                        <!-- Hidden — diisi otomatis di controller -->
+                        <input type="hidden" name="current_outlet_id" value="">
+                        <input type="hidden" name="manifest_id" value="">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Estimated Delivery Date</label>
+                            <input type="date" name="estimated_delivery_date" class="form-control" required>
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Qty</label>
-                            <input type="number" name="qty" class="form-control" min="1" required>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Status</label>
+                            <select name="payment_status" class="form-control" required>
+                                <option value="unpaid">Unpaid</option>
+                                <option value="paid">Paid</option>
+                                <option value="cod">COD</option>
+                            </select>
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Berat (kg)</label>
-                            <input type="number" step="0.01" name="weight_kg" id="weight_kg" class="form-control" required>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Nilai Barang</label>
-                            <input type="number" step="0.01" name="declared_value" class="form-control" value="0">
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Panjang (cm)</label>
-                            <input type="number" step="0.01" name="length_cm" class="form-control" required>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Lebar (cm)</label>
-                            <input type="number" step="0.01" name="width_cm" class="form-control" required>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Tinggi (cm)</label>
-                            <input type="number" step="0.01" name="height_cm" class="form-control" required>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Ongkir</label>
-                            <input type="number" step="0.01" name="shipping_fee" id="shipping_fee" class="form-control" value="0" readonly required>
-
-                            <small id="ongkirPreview" class="text-muted"></small>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Asuransi</label>
-                            <input type="number" step="0.01" name="insurance_fee" class="form-control" value="0" required>
-                        </div>
-
-                        <div class="col-md-4 mb-3 d-flex align-items-end">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_fragile" value="1" id="is_fragile">
-                                <label class="form-check-label" for="is_fragile">
-                                    Barang Fragile
-                                </label>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">COD Amount</label>
+                            <input type="number" name="cod_amount" class="form-control" value="0" required>
                         </div>
 
                     </div>
@@ -296,148 +344,119 @@
     </div>
 </div>
 
+
+
+<?= $this->endSection(); ?>
+
+<?= $this->section('scripts') ?>
 <script>
-    const tableBody = document.getElementById("shipmentTable");
-    const rows = Array.from(tableBody.querySelectorAll("tr"));
+    $(document).ready(function() {
 
-    const searchInput = document.getElementById("searchInput");
-    const pagination = document.getElementById("pagination");
-    const tableInfo = document.getElementById("tableInfo");
+        // =====================
+        // TABLE + PAGINATION
+        // =====================
+        const tableBody = document.getElementById("shipmentTable");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+        const searchInput = document.getElementById("searchInput");
+        const pagination = document.getElementById("pagination");
+        const tableInfo = document.getElementById("tableInfo");
 
-    let filteredRows = [...rows];
-    let currentPage = 1;
-    const rowsPerPage = 10;
+        let filteredRows = [...rows];
+        let currentPage = 1;
+        const rowsPerPage = 10;
 
-    function showPage() {
-        rows.forEach(row => row.style.display = "none");
+        function showPage() {
+            rows.forEach(row => row.style.display = "none");
+            const visibleRows = filteredRows.filter(row => !row.querySelector("td[colspan]"));
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            visibleRows.forEach(row => row.style.display = "none");
+            visibleRows.slice(start, end).forEach(row => row.style.display = "");
 
-        const visibleRows = filteredRows.filter(row => !row.querySelector("td[colspan]"));
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
+            const emptyRow = tableBody.querySelector("td[colspan]");
+            if (emptyRow) {
+                const emptyTr = emptyRow.closest("tr");
+                emptyTr.style.display = visibleRows.length === 0 ? "" : "none";
+            }
 
-        visibleRows.forEach(row => row.style.display = "none");
-        visibleRows.slice(start, end).forEach(row => {
-            row.style.display = "";
-        });
+            tableInfo.innerText = `Menampilkan ${visibleRows.length === 0 ? 0 : start + 1} - ${Math.min(end, visibleRows.length)} dari ${visibleRows.length} data`;
+            createPagination(visibleRows.length);
+        }
 
-        const emptyRow = tableBody.querySelector("td[colspan]");
-        if (emptyRow) {
-            const emptyTr = emptyRow.closest("tr");
-            if (visibleRows.length === 0) {
-                emptyTr.style.display = "";
-            } else {
-                emptyTr.style.display = "none";
+        function createPagination(totalData) {
+            pagination.innerHTML = "";
+            const totalPages = Math.ceil(totalData / rowsPerPage);
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = `page-item ${i === currentPage ? "active" : ""}`;
+                const a = document.createElement("a");
+                a.className = "page-link";
+                a.href = "#";
+                a.textContent = i;
+                a.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    currentPage = i;
+                    showPage();
+                });
+                li.appendChild(a);
+                pagination.appendChild(li);
             }
         }
 
-        tableInfo.innerText =
-            `Menampilkan ${visibleRows.length === 0 ? 0 : start + 1} - ${Math.min(end, visibleRows.length)} dari ${visibleRows.length} data`;
+        searchInput.addEventListener("keyup", function() {
+            const keyword = this.value.toLowerCase();
+            filteredRows = rows.filter(row => row.innerText.toLowerCase().includes(keyword));
+            currentPage = 1;
+            showPage();
+        });
 
-        createPagination(visibleRows.length);
-    }
-
-    $('#ongkirPreview').html('Menghitung...');
-
-    function hitungOngkir() {
-
-        let service = $('#service_id option:selected').data('name');
-        let berat = $('#weight_kg').val();
-
-        console.log(service, berat);
-
-        if (!service || !berat) return;
-
-        $.ajax({
-    url: '/cek_ongkir',
-    method: 'POST',
-    data: {
-        service: service,
-        berat: berat
-    },
-    success: function(res) {
-
-        console.log(res); // DEBUG
-
-        $('#shipping_fee').val(res.total);
-
-        $('#ongkirPreview').html(`
-            Harga/kg : Rp ${res.harga_per_kg.toLocaleString()} <br>
-            Total    : <b>Rp ${res.total.toLocaleString()}</b>
-        `);
-    },
-    error: function(xhr) {
-        console.log(xhr.responseText);
-        alert('Error ongkir, cek console');
-    }
-});
-    }
-
-    $('#service_id, #weight_kg').on('change keyup', function() {
-        hitungOngkir();
-    });
-
-    function createPagination(totalData) {
-        pagination.innerHTML = "";
-
-        const totalPages = Math.ceil(totalData / rowsPerPage);
-
-        for (let i = 1; i <= totalPages; i++) {
-            const li = document.createElement("li");
-            li.className = `page-item ${i === currentPage ? "active" : ""}`;
-
-            const a = document.createElement("a");
-            a.className = "page-link";
-            a.href = "#";
-            a.textContent = i;
-
-            a.addEventListener("click", function(e) {
-                e.preventDefault();
-                currentPage = i;
-                showPage();
-            });
-
-            li.appendChild(a);
-            pagination.appendChild(li);
-        }
-    }
-
-    searchInput.addEventListener("keyup", function() {
-        const keyword = this.value.toLowerCase();
-
-        filteredRows = rows.filter(row =>
-            row.innerText.toLowerCase().includes(keyword)
-        );
-
-        currentPage = 1;
         showPage();
-    });
 
-    showPage();
+        // =====================
+        // HITUNG ONGKIR
+        // =====================
+        function hitungOngkir() {
+            let service = $('#service_id option:selected').data('name');
+            let berat = $('#weight_kg').val();
+            if (!service || !berat) return;
 
-    function bindLocationInput(textInputSelector, datalistSelector, hiddenInputSelector) {
-        const textInput = document.querySelector(textInputSelector);
-        const datalist = document.querySelector(datalistSelector);
-        const hiddenInput = document.querySelector(hiddenInputSelector);
-
-        textInput.addEventListener('input', function() {
-            const options = datalist.querySelectorAll('option');
-            let found = false;
-
-            options.forEach(option => {
-                if (option.value === this.value) {
-                    hiddenInput.value = option.dataset.id;
-                    found = true;
+            $.ajax({
+                url: '/cek_ongkir',
+                method: 'POST',
+                data: {
+                    service: service,
+                    berat: berat
+                },
+                success: function(res) {
+                    $('#shipping_fee').val(res.total);
+                    $('#ongkirPreview').html(`
+                    Harga/kg : Rp ${res.harga_per_kg.toLocaleString()} <br>
+                    Total    : <b>Rp ${res.total.toLocaleString()}</b>
+                `);
+                },
+                error: function(xhr) {
+                    console.log(xhr.responseText);
+                    alert('Error ongkir, cek console');
                 }
             });
+        }
 
-            if (!found) {
-                hiddenInput.value = '';
-            }
+        $('#service_id, #weight_kg').on('change keyup', function() {
+            hitungOngkir();
         });
-    }
 
-    bindLocationInput('input[list="originLocationList"]', '#originLocationList', '#origin_location_id');
-    bindLocationInput('input[list="destinationLocationList"]', '#destinationLocationList', '#destination_location_id');
+        // =====================
+        // SELECT2 LOKASI
+        // =====================
+        $('#addShipmentModal').on('shown.bs.modal', function() {
+            $('.select2-location').select2({
+                dropdownParent: $('#addShipmentModal'),
+                placeholder: 'Ketik untuk mencari lokasi...',
+                allowClear: true,
+                width: '100%'
+            });
+        });
+
+    });
 </script>
-
 <?= $this->endSection(); ?>

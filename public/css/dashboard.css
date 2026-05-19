@@ -50,6 +50,11 @@ body {
   color: white;
 }
 
+.modal-dialog-scrollable .modal-body {
+    max-height: 80vh; /* Atur sesuai kebutuhan */
+    overflow-y: auto;
+}
+
 .logo-icon {
   width: 45px;
   height: 45px;

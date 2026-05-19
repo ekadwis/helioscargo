@@ -73,17 +73,17 @@
                             <tr>
                                 <td><?= $index + 1 ?></td>
                                 <td>
-                                    <strong><?= esc($c['name']) ?></strong>
+                                    <strong><?= ($c['name']) ?></strong>
                                 </td>
-                                <td><?= esc($c['email']) ?></td>
-                                <td><?= esc($c['phone']) ?></td>
-                                <td><?= esc($c['kabupaten']) ?></td>
+                                <td><?= ($c['email']) ?></td>
+                                <td><?= ($c['phone']) ?></td>
+                                <td><?= ($c['kabupaten']) ?></td>
                                 <td>
                                     <span class="status-badge delivered">Aktif</span>
                                 </td>
 
                                 <td>
-                                    <button class="btn btn-secondary editCustomerBtn" data-id="<?= $c['id'] ?>" data-name="<?= esc($c['name']) ?>" data-email="<?= esc($c['email']) ?>" data-phone="<?= esc($c['phone']) ?>" data-address="<?= esc($c['address']) ?>" data-type="<?= esc($c['type']) ?>" data-location="<?= esc($c['location_id']) ?>" style="padding:0.25rem 0.5rem;font-size:0.75rem;" data-bs-toggle="modal" data-bs-target="#modalEditCustomer">
+                                    <button class="btn btn-secondary editCustomerBtn" data-id="<?= $c['id'] ?>" data-name="<?= ($c['name']) ?>" data-email="<?= ($c['email']) ?>" data-phone="<?= ($c['phone']) ?>" data-address="<?= ($c['address']) ?>" data-type="<?= ($c['type']) ?>" data-location="<?= ($c['location_id']) ?>" style="padding:0.25rem 0.5rem;font-size:0.75rem;" data-bs-toggle="modal" data-bs-target="#modalEditCustomer">
 
                                         <i class="bi bi-pencil"></i>
                                     </button>
@@ -124,125 +124,99 @@
 <div class="modal fade" id="modalTambahPelanggan" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
+            <form action="<?= base_url('pelanggan/create') ?>" method="post">
+                <?= csrf_field(); ?>
 
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Pelanggan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Pengirim & Penerima</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-            <div class="modal-body">
+                <div class="modal-body">
 
-                <form action="<?= base_url('pelanggan/create') ?>" method="post">
-                    <?= csrf_field(); ?>
-
-                    <!-- INPUT PENGIRIM -->
+                    <!-- PENGIRIM -->
                     <div class="border rounded p-3 mb-4">
-                        <h5 class="mb-3">Input Pengirim</h5>
-
+                        <h5 class="mb-3 text-primary">Pengirim (Sender)</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Nama Pelanggan</label>
+                                <label class="form-label">Nama Pengirim <span class="text-danger">*</span></label>
                                 <input type="text" name="sender_name" class="form-control" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tipe</label>
                                 <select name="sender_type" class="form-select">
-                                    <option value="Perusahaan">Perusahaan</option>
-                                    <option value="Perorangan">Individu</option>
+                                    <option value="sender" selected>Pengirim</option>
                                 </select>
                             </div>
-
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telepon <span class="text-danger">*</span></label>
+                                <input type="number" name="sender_phone" class="form-control" required>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
                                 <input type="email" name="sender_email" class="form-control">
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Telepon</label>
-                                <input type="text" name="sender_phone" class="form-control">
-                            </div>
-
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Alamat</label>
                                 <textarea name="sender_address" class="form-control" rows="2"></textarea>
                             </div>
-
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Lokasi</label>
                                 <select name="sender_location_id" class="form-select">
                                     <option value="">Pilih lokasi...</option>
-                                    <option value="6">Jakarta Selatan</option>
-                                    <option value="7">Bandung</option>
-                                    <option value="8">Surabaya</option>
-                                    <option value="9">Yogyakarta</option>
-                                    <option value="10">Medan</option>
+                                    <?php foreach ($locations as $loc): ?>
+                                        <option value="<?= $loc['id'] ?>"><?= ($loc['kabupaten']) ?> - <?= ($loc['provinsi']) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- INPUT PENERIMA -->
-                    <div class="border rounded p-3 mb-3">
-                        <h5 class="mb-3">Input Penerima</h5>
-
+                    <!-- PENERIMA -->
+                    <div class="border rounded p-3">
+                        <h5 class="mb-3 text-success">Penerima (Receiver)</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Nama Pelanggan</label>
+                                <label class="form-label">Nama Penerima <span class="text-danger">*</span></label>
                                 <input type="text" name="receiver_name" class="form-control" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Tipe</label>
                                 <select name="receiver_type" class="form-select">
-                                    <option value="Perusahaan">Perusahaan</option>
-                                    <option value="Perorangan">Individu</option>
+                                    <option value="receiver" selected>Penerima</option>
                                 </select>
                             </div>
-
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telepon <span class="text-danger">*</span></label>
+                                <input type="number" name="receiver_phone" class="form-control" required>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
                                 <input type="email" name="receiver_email" class="form-control">
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Telepon</label>
-                                <input type="text" name="receiver_phone" class="form-control">
-                            </div>
-
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Alamat</label>
                                 <textarea name="receiver_address" class="form-control" rows="2"></textarea>
                             </div>
-
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Lokasi</label>
                                 <select name="receiver_location_id" class="form-select">
                                     <option value="">Pilih lokasi...</option>
-                                    <option value="6">Jakarta Selatan</option>
-                                    <option value="7">Bandung</option>
-                                    <option value="8">Surabaya</option>
-                                    <option value="9">Yogyakarta</option>
-                                    <option value="10">Medan</option>
+                                    <?php foreach ($locations as $loc): ?>
+                                        <option value="<?= $loc['id'] ?>"><?= ($loc['kabupaten']) ?> - <?= ($loc['provinsi']) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            Batal
-                        </button>
+                </div>
 
-                        <button type="submit" class="btn btn-primary">
-                            Simpan Pengirim & Penerima
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Pengirim & Penerima</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

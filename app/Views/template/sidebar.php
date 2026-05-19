@@ -16,73 +16,74 @@
         </a>
     </div>
 
-    <nav class="sidebar-nav">
+<nav class="sidebar-nav">
 
-        <div class="nav-section">
-            <div class="nav-section-title">Menu Utama</div>
+    <div class="nav-section">
+        <div class="nav-section-title">Menu Utama</div>
+        
+        <?php
+        $uri = service('uri');
+        $segment1 = $uri->getSegment(1);
+        $segment2 = $uri->getSegment(2);
+        ?>
 
-            <!-- Wajib, untuk active sidebar -->
-            <?php
-            $uri = service('uri');
-            $menu = $uri->getSegment(1);
-            ?>
+        <a class="nav-item <?= ($segment1 == 'dashboard' || $segment1 == '') ? 'active' : '' ?>" href="<?= base_url('dashboard') ?>">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'dashboard' || $menu == '') ? 'active' : '' ?>" href="<?= base_url('dashboard') ?>">
-                <i class="bi bi-grid-1x2-fill"></i>
-                <span>Dashboard</span>
-            </a>
+        <a class="nav-item <?= in_array($segment1, ['pelanggan', 'customers']) ? 'active' : '' ?>" href="<?= base_url('pelanggan') ?>">
+            <i class="bi bi-people-fill"></i>
+            <span>Data Pelanggan</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'pelanggan') ? 'active' : '' ?>" href="<?= base_url('pelanggan') ?>">
-                <i class="bi bi-people-fill"></i>
-                <span>Data Pelanggan</span>
-            </a>
+        <!-- SHIPMENT (Fokus Outlet Saat Ini) -->
+        <a class="nav-item <?= ($segment1 == 'shipment' && $segment2 != 'tracking') ? 'active' : '' ?>" href="<?= base_url('shipment') ?>">
+            <i class="bi bi-box-seam"></i>
+            <span>Shipment</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'shipment') ? 'active' : '' ?>" href="<?= base_url('shipment') ?>">
-                <i class="bi bi-box-seam"></i>
-                <span>Shipment</span>
-            </a>
+        <!-- MANIFEST -->
+        <a class="nav-item <?= ($segment1 == 'manifest') ? 'active' : '' ?>" href="<?= base_url('manifest') ?>">
+            <i class="bi bi-boxes"></i>
+            <span>Manifest / Master AWB</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'shipment-tracking') ? 'active' : '' ?>" href="<?= base_url('shipment-tracking') ?>">
-                <i class="bi bi-truck"></i>
-                <span>Shipment Tracking</span>
-            </a>
+        <!-- SHIPMENT TRACKING (Global View) -->
+        <a class="nav-item <?= ($segment1 == 'shipment-tracking' || ($segment1 == 'shipment' && $segment2 == 'tracking')) ? 'active' : '' ?>" href="<?= base_url('shipment-tracking') ?>">
+            <i class="bi bi-truck"></i>
+            <span>Shipment Tracking</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'laporan') ? 'active' : '' ?>" href="<?= base_url('laporan') ?>">
-                <i class="bi bi-bar-chart-line-fill"></i>
-                <span>Laporan</span>
-            </a>
+        <!-- OUTLET & GUDANG -->
+         
+        <a class="nav-item <?= ($segment1 == 'outlet') ? 'active' : '' ?>" href="<?= base_url('outlet') ?>">
+            <i class="bi bi-building"></i>
+            <span>Outlet & Gudang</span>
+        </a>
 
-            <a class="nav-item <?= ($menu == 'invoice') ? 'active' : '' ?>" href="<?= base_url('invoice') ?>">
-                <i class="bi bi-receipt-cutoff"></i>
-                <span>Invoice</span>
-            </a>
+    </div>
 
-        </div>
+    <div class="nav-section">
+        <div class="nav-section-title">System</div>
 
-        <div class="nav-section">
+        <a class="nav-item <?= ($segment1 == 'users') ? 'active' : '' ?>" href="<?= base_url('users') ?>">
+            <i class="bi bi-person-gear"></i>
+            <span>Manajemen User</span>
+        </a>
 
-            <div class="nav-section-title">
-                System
-            </div>
+        <a class="nav-item <?= ($segment1 == 'settings') ? 'active' : '' ?>" href="<?= base_url('settings') ?>">
+            <i class="bi bi-gear-fill"></i>
+            <span>Pengaturan</span>
+        </a>
 
-            <a class="nav-item" href="<?= base_url('users') ?>">
-                <i class="bi bi-person-gear"></i>
-                <span>Users</span>
-            </a>
+        <a class="nav-item text-danger" href="<?= base_url('logout') ?>">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </a>
+    </div>
 
-            <a class="nav-item" href="<?= base_url('settings') ?>">
-                <i class="bi bi-gear-fill"></i>
-                <span>Settings</span>
-            </a>
-
-            <a class="nav-item" href="<?= base_url('logout') ?>">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Logout</span>
-            </a>
-
-        </div>
-
-    </nav>
+</nav>
 
     <div class="sidebar-footer">
 
