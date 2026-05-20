@@ -205,9 +205,13 @@ class DashboardController extends BaseController
 
         $now = date('Y-m-d H:i:s');
 
+        $pickupOutletId = session()->get('role') === 'superadmin'
+        ? $this->request->getPost('pickup_outlet_id')
+        : session()->get('outlet_id');
+
         $data = [
             'awb'                     => $awb,
-            'created_by_user_id'      => 1,
+            'created_by_user_id'      => session()->get('user_id'),
             'sender_customer_id'      => $this->request->getPost('sender_customer_id'),
             'receiver_customer_id'    => $this->request->getPost('receiver_customer_id'),
             'origin_location_id'      => $this->request->getPost('origin_location_id'),
@@ -228,13 +232,13 @@ class DashboardController extends BaseController
             'current_status'          => 'draft',
             'created_at'              => $now,
             'updated_at'              => $now,
-            'pickup_outlet_id'        => $this->request->getPost('pickup_outlet_id'), // Tambahkan ini
-            'delivery_outlet_id'      => $this->request->getPost('delivery_outlet_id'), // Tambahkan ini
-            'current_outlet_id'       => $this->request->getPost('pickup_outlet_id'),  // Tambahkan ini
-            'manifest_id'             => null,        // Tambahkan ini
-            'estimated_delivery_date' => $this->request->getPost('estimated_delivery_date'), // Tambahkan ini
-            'payment_status'          => $this->request->getPost('payment_status'),     // Tambahkan ini
-            'cod_amount'              => $this->request->getPost('cod_amount'),         // Tambahkan ini
+            'pickup_outlet_id'        => $pickupOutletId,
+            'delivery_outlet_id'      => $this->request->getPost('delivery_outlet_id'),
+            'current_outlet_id'       => $pickupOutletId, 
+            'manifest_id'             => null,       
+            'estimated_delivery_date' => $this->request->getPost('estimated_delivery_date'),
+            'payment_status'          => $this->request->getPost('payment_status'),    
+            'cod_amount'              => $this->request->getPost('cod_amount'),        
         ];
 
         $shipmentModel->insert($data);
@@ -245,7 +249,7 @@ class DashboardController extends BaseController
             'location_id'         => $this->request->getPost('origin_location_id'),
             'status'              => 'CREATED',
             'description'         => 'Shipment berhasil dibuat dan menunggu proses pengiriman. AWB: ' . $awb,
-            'created_by_user_id'  => 1,
+            'created_by_user_id'  => session()->get('user_id'),
             'created_at'          => $now,
         ];
 
@@ -428,7 +432,7 @@ class DashboardController extends BaseController
             'location_id'        => null,
             'status'             => $status,
             'description'        => $description,
-            'created_by_user_id' => 1,
+            'created_by_user_id' => session()->get('user_id'),
             'created_at'         => date('Y-m-d H:i:s'),
         ]);
 
@@ -551,7 +555,7 @@ class DashboardController extends BaseController
             'total_shipments'    => count($shipmentIds),
             'total_weight'       => $totalWeight,
             'status'             => 'draft',
-            'created_by'         => 1,
+            'created_by'         => session()->get('user_id'),
             'created_at'         => date('Y-m-d H:i:s'),
         ];
 

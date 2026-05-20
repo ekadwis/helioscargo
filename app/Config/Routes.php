@@ -6,48 +6,71 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 /**
  * @var RouteCollection $routes
  */
+// =====================
+// PUBLIK — tanpa login
+// =====================
 $routes->get('/', 'Home::index');
-$routes->get('/dashboard', 'DashboardController::dashboard');
+$routes->get('/login', 'AuthController::login');
+$routes->post('/login', 'AuthController::doLogin');
+$routes->get('/logout', 'AuthController::logout');
 
-// Customer Section
-$routes->get('/pelanggan', 'DashboardController::dataPelanggan');
-$routes->get('/pelanggan/delete/(:num)', 'DashboardController::deleteCustomer/$1');
-$routes->post('/pelanggan/create', 'DashboardController::createCustomer');
-$routes->post('/pelanggan/update', 'DashboardController::updateCustomer');
+// =====================
+// PROTECTED — butuh login
+// =====================
+$routes->group('', ['filter' => 'auth'], function($routes) {
 
-// Shipment Section
-$routes->get('/shipment', 'DashboardController::shipment');
-$routes->post('/shipment/store', 'DashboardController::storeShipment');
-$routes->get('/shipment/detail/(:num)', 'DashboardController::detailShipment/$1');
-$routes->get('/shipment/edit/(:num)', 'DashboardController::editShipment/$1');
-$routes->post('/shipment/update/(:num)', 'DashboardController::updateShipment/$1');
-$routes->post('/shipment/delete/(:num)', 'DashboardController::deleteShipment/$1');
-$routes->get('/shipment-tracking', 'DashboardController::shipmentTracking');
-$routes->post('/shipment/updateTracking', 'DashboardController::updateTracking');
-$routes->post('/cek_ongkir', 'DashboardController::cek_ongkir');
+    $routes->get('/dashboard', 'DashboardController::dashboard');
 
-// Outlet Section
-$routes->get('/outlet', 'OutletController::index');
-$routes->post('/outlet/store', 'OutletController::store');
-$routes->get('/outlet/edit/(:num)', 'OutletController::edit/$1');
-$routes->post('/outlet/update/(:num)', 'OutletController::update/$1');
-$routes->post('/outlet/delete/(:num)', 'OutletController::delete/$1');
+    // Customer Section
+    $routes->get('/pelanggan', 'DashboardController::dataPelanggan');
+    $routes->get('/pelanggan/delete/(:num)', 'DashboardController::deleteCustomer/$1');
+    $routes->post('/pelanggan/create', 'DashboardController::createCustomer');
+    $routes->post('/pelanggan/update', 'DashboardController::updateCustomer');
 
-// Manifest Section
-$routes->get('/manifest', 'DashboardController::manifest');
-$routes->post('/manifest/store', 'DashboardController::storeManifest');
-$routes->get('/manifest/detail/(:num)', 'DashboardController::detailManifest/$1');
-$routes->post('/manifest/updateStatus/(:num)', 'DashboardController::updateManifestStatus/$1');
-$routes->get('/manifest/getShipments', 'DashboardController::getShipmentsForManifest');
+    // Shipment Section
+    $routes->get('/shipment', 'DashboardController::shipment');
+    $routes->post('/shipment/store', 'DashboardController::storeShipment');
+    $routes->get('/shipment/detail/(:num)', 'DashboardController::detailShipment/$1');
+    $routes->get('/shipment/edit/(:num)', 'DashboardController::editShipment/$1');
+    $routes->post('/shipment/update/(:num)', 'DashboardController::updateShipment/$1');
+    $routes->post('/shipment/delete/(:num)', 'DashboardController::deleteShipment/$1');
+    $routes->get('/shipment-tracking', 'DashboardController::shipmentTracking');
+    $routes->post('/shipment/updateTracking', 'DashboardController::updateTracking');
+    $routes->post('/cek_ongkir', 'DashboardController::cek_ongkir');
 
-// Laporan Section 
-$routes->get('/laporan', 'DashboardController::laporan');
+    // Outlet Section
+    $routes->get('/outlet', 'OutletController::index');
+    $routes->post('/outlet/store', 'OutletController::store');
+    $routes->get('/outlet/edit/(:num)', 'OutletController::edit/$1');
+    $routes->post('/outlet/update/(:num)', 'OutletController::update/$1');
+    $routes->post('/outlet/delete/(:num)', 'OutletController::delete/$1');
 
-// Invoice Section 
-$routes->get('/invoice', 'DashboardController::invoice');
+    // Manifest Section
+    $routes->get('/manifest', 'DashboardController::manifest');
+    $routes->post('/manifest/store', 'DashboardController::storeManifest');
+    $routes->get('/manifest/detail/(:num)', 'DashboardController::detailManifest/$1');
+    $routes->post('/manifest/updateStatus/(:num)', 'DashboardController::updateManifestStatus/$1');
+    $routes->get('/manifest/getShipments', 'DashboardController::getShipmentsForManifest');
 
-// User Section 
-$routes->get('/users', 'DashboardController::users');
+    // Invoice Section
+    $routes->get('/invoice', 'DashboardController::invoice');
 
-// Setting Section 
-$routes->get('/settings', 'DashboardController::settings');
+    // Settings Section
+    $routes->get('/settings', 'DashboardController::settings');
+
+    // =====================
+    // SUPERADMIN ONLY
+    // =====================
+    $routes->group('', ['filter' => 'superadmin'], function($routes) {
+
+        // Users Management
+        $routes->get('/users', 'UserController::index');
+        $routes->post('/users/store', 'UserController::store');
+        $routes->get('/users/edit/(:num)', 'UserController::edit/$1');
+        $routes->post('/users/update/(:num)', 'UserController::update/$1');
+        $routes->post('/users/delete/(:num)', 'UserController::delete/$1');
+
+        // Laporan
+        $routes->get('/laporan', 'DashboardController::laporan');
+    });
+});
