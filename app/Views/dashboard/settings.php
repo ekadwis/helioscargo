@@ -1,61 +1,113 @@
 <?= $this->extend('template/template') ?>
-
 <?= $this->section('content') ?>
-<div class="page-content active" id="page-settings">
+
+<div class="page-content active">
 
     <?php if (session()->getFlashdata('error')) : ?>
-        <div class="alert alert-danger alert-dismissible fade show auto-alert" role="alert">
-            <?php
-            $errorData = session()->getFlashdata('error');
-            if (is_array($errorData)) :
-                foreach ($errorData as $err) :
-            ?>
-                    <div><?= ($err) ?></div>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <div><?= ($errorData) ?></div>
-            <?php endif; ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('error') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (session()->getFlashdata('success')) : ?>
-        <div class="alert alert-success alert-dismissible fade show auto-alert" role="alert">
-            <?= (session()->getFlashdata('success')) ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('success') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <div class="row">
+
+        <!-- Profil Akun — semua role bisa akses -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-person-circle me-2"></i>Profil Akun
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form action="/settings/profile" method="post">
+                        <?= csrf_field() ?>
+
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control"
+                                value="<?= session()->get('username') ?>" disabled>
+                            <small class="text-muted">Username tidak bisa diubah.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" name="full_name" class="form-control"
+                                value="<?= $user['full_name'] ?? '' ?>" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control"
+                                value="<?= session()->get('role') === 'superadmin' ? 'Super Administrator' : 'Administrator' ?>"
+                                disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Password Baru
+                                <small class="text-muted">(kosongkan jika tidak diubah)</small>
+                            </label>
+                            <input type="password" name="password" class="form-control"
+                                placeholder="Minimal 6 karakter">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Outlet</label>
+                            <input type="text" class="form-control" disabled
+                                value="<?= $user['outlet_id'] ?? '-' ?>">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Simpan Profil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informasi Perusahaan — superadmin only -->
         <div class="col-lg-7 mb-4">
-            <div class="card mb-4">
+            <?php if (session()->get('role') === 'superadmin') : ?>
+            <div class="card">
                 <div class="card-header">
                     <h3 class="card-title mb-0">
                         <i class="bi bi-building me-2"></i>Informasi Perusahaan
                     </h3>
                 </div>
-
                 <div class="card-body">
-                    <form id="formSettings" onsubmit="return saveCompanySettings(event)">
+                    <form action="/settings/company" method="post">
+                        <?= csrf_field() ?>
+
                         <div class="mb-3">
                             <label class="form-label">Nama Perusahaan</label>
-                            <input type="text" class="form-control" id="companyNameInput" value="HELIOSCARGO">
+                            <input type="text" name="company_name" class="form-control"
+                                value="<?= $settings['company_name'] ?? '' ?>" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Alamat</label>
-                            <textarea class="form-control" rows="3">Jl. Logistik Raya No. 123, Jakarta Utara</textarea>
+                            <textarea name="company_address" class="form-control" rows="3"><?= $settings['company_address'] ?? '' ?></textarea>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Telepon</label>
-                                <input type="text" class="form-control" value="021-5551234">
+                                <input type="text" name="company_phone" class="form-control"
+                                    value="<?= $settings['company_phone'] ?? '' ?>">
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" value="info@helioscargo.com">
+                                <input type="email" name="company_email" class="form-control"
+                                    value="<?= $settings['company_email'] ?? '' ?>">
                             </div>
                         </div>
 
@@ -65,112 +117,17 @@
                     </form>
                 </div>
             </div>
-        </div>
-
-        <div class="col-lg-5 mb-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title mb-0">
-                        <i class="bi bi-bell me-2"></i>Notifikasi
-                    </h3>
-                </div>
-
-                <div class="card-body">
-                    <form id="formNotifications" onsubmit="return saveNotificationSettings(event)">
-                        <div class="d-flex flex-column gap-3">
-                            <label class="d-flex align-items-center gap-2">
-                                <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                <span>Notifikasi pengiriman baru</span>
-                            </label>
-
-                            <label class="d-flex align-items-center gap-2">
-                                <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                <span>Notifikasi invoice jatuh tempo</span>
-                            </label>
-
-                            <label class="d-flex align-items-center gap-2">
-                                <input type="checkbox" style="width: 18px; height: 18px;">
-                                <span>Notifikasi stok rendah</span>
-                            </label>
-
-                            <label class="d-flex align-items-center gap-2">
-                                <input type="checkbox" checked style="width: 18px; height: 18px;">
-                                <span>Email ringkasan harian</span>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary mt-4">
-                            <i class="bi bi-save me-1"></i> Simpan Notifikasi
-                        </button>
-                    </form>
+            <?php else : ?>
+            <div class="card">
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="bi bi-lock fs-1"></i>
+                    <p class="mt-3">Pengaturan perusahaan hanya bisa diakses oleh Superadmin.</p>
                 </div>
             </div>
-
-            <div class="card border-danger">
-                <div class="card-header">
-                    <h3 class="card-title mb-0 text-danger">
-                        <i class="bi bi-shield-exclamation me-2"></i>Zona Bahaya
-                    </h3>
-                </div>
-
-                <div class="card-body">
-                    <p class="text-muted" style="font-size: 0.9rem;">
-                        Tindakan berikut tidak dapat dibatalkan.
-                    </p>
-
-                    <button class="btn btn-outline-danger" onclick="resetAllData()">
-                        <i class="bi bi-trash me-1"></i> Reset Semua Data
-                    </button>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
+
     </div>
-
 </div>
 
-<script>
-    function handleDummySave(button) {
-        const originalText = button.innerHTML;
-
-        button.disabled = true;
-        button.innerHTML = '<i class="bi bi-check-lg me-1"></i> Tersimpan';
-        button.classList.remove('btn-primary');
-        button.classList.add('btn-success');
-
-        setTimeout(() => {
-            button.disabled = false;
-            button.innerHTML = originalText;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-primary');
-        }, 1500);
-    }
-
-    function saveCompanySettings(event) {
-        event.preventDefault();
-        const button = event.target.querySelector('button[type="submit"]');
-        handleDummySave(button);
-        return false;
-    }
-
-    function saveAppearanceSettings(event) {
-        event.preventDefault();
-        const button = event.target.querySelector('button[type="submit"]');
-        handleDummySave(button);
-        return false;
-    }
-
-    function saveNotificationSettings(event) {
-        event.preventDefault();
-        const button = event.target.querySelector('button[type="submit"]');
-        handleDummySave(button);
-        return false;
-    }
-
-    function resetAllData() {
-        const confirmed = confirm('Yakin ingin reset semua data? Tindakan ini tidak dapat dibatalkan.');
-        if (confirmed) {
-            alert('Dummy reset semua data berhasil dijalankan.');
-        }
-    }
-</script>
-<?= $this->endSection(); ?>
+<?= $this->endSection() ?>

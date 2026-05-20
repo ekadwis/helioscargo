@@ -15,7 +15,7 @@ class UserModel extends Model
         'full_name', 'role', 'is_active',
     ];
 
-    protected $useTimestamps = true;
-    protected $createdField  = 'created_at';
-    protected $updatedField  = null;
+    protected $useTimestamps = false;
+    protected $createdField  = '';
+    protected $updatedField  = '';
 }

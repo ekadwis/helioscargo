@@ -57,6 +57,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
 
     // Settings Section
     $routes->get('/settings', 'DashboardController::settings');
+    $routes->post('/settings/profile', 'DashboardController::updateProfile');
 
     // =====================
     // SUPERADMIN ONLY
@@ -72,5 +73,9 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
 
         // Laporan
         $routes->get('/laporan', 'DashboardController::laporan');
+        $routes->get('/laporan/export', 'DashboardController::exportLaporan');
+
+        // Settings perusahaan
+        $routes->post('/settings/company', 'DashboardController::updateCompanySettings');
     });
 });

@@ -12,13 +12,18 @@ class UserController extends BaseController
         $userModel   = new UserModel();
         $outletModel = new OutletModel();
 
+        $users = $userModel
+            ->select('users.*, outlets.name as outlet_name')
+            ->join('outlets', 'outlets.id = users.outlet_id', 'left')
+            ->orderBy('users.id', 'ASC')
+            ->findAll();
+
         $data = [
-            'users'   => $userModel
-                            ->select('users.*, outlets.name as outlet_name')
-                            ->join('outlets', 'outlets.id = users.outlet_id', 'left')
-                            ->orderBy('users.id', 'ASC')
-                            ->findAll(),
-            'outlets' => $outletModel->where('is_active', 1)->findAll(),
+            'users'           => $users,
+            'outlets'         => $outletModel->where('is_active', 1)->findAll(),
+            'totalUsers'      => count($users),
+            'totalSuperadmin' => count(array_filter($users, fn($u) => $u['role'] === 'superadmin')),
+            'totalAdmin'      => count(array_filter($users, fn($u) => $u['role'] === 'admin')),
         ];
 
         return view('dashboard/users', $data);

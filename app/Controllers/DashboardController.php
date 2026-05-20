@@ -17,7 +17,87 @@ class DashboardController extends BaseController
 {
     public function dashboard()
     {
-        return view('dashboard/dashboard.php');
+        $db            = \Config\Database::connect();
+        $shipmentModel = new ShipmentModel();
+        $customerModel = new CustomerModel();
+        $outletModel   = new OutletModel();
+
+        // ---- Summary Cards ----
+        $totalShipment  = $shipmentModel->countAll();
+        $totalPelanggan = $customerModel->countAll();
+        $totalOutlet    = $outletModel->where('is_active', 1)->countAllResults();
+
+        $totalPendapatan = $db->table('shipments')
+            ->selectSum('total_amount')
+            ->get()->getRow()->total_amount ?? 0;
+
+        $pendapatanBulanIni = $db->table('shipments')
+            ->selectSum('total_amount')
+            ->where('MONTH(created_at)', date('m'))
+            ->where('YEAR(created_at)', date('Y'))
+            ->get()->getRow()->total_amount ?? 0;
+
+        // ---- Status Breakdown ----
+        $statusList = ['draft', 'booked', 'picked_up', 'in_transit', 'delivered', 'cancelled'];
+        $statusCount = [];
+        foreach ($statusList as $s) {
+            $statusCount[$s] = $shipmentModel->where('current_status', $s)->countAllResults();
+        }
+
+        // ---- 7 Shipment Terbaru ----
+        $recentShipments = $db->table('shipments s')
+            ->select('s.awb, s.item_name, s.current_status, s.total_amount, s.created_at,
+                  c.name AS sender_name, l.kabupaten AS tujuan')
+            ->join('customers c', 'c.id = s.sender_customer_id', 'left')
+            ->join('locations l', 'l.id = s.destination_location_id', 'left')
+            ->orderBy('s.created_at', 'DESC')
+            ->limit(7)
+            ->get()->getResultArray();
+
+        // ---- Tracking Terbaru ----
+        $recentTracking = $db->table('shipment_tracking st')
+            ->select('st.status, st.description, st.created_at, s.awb')
+            ->join('shipments s', 's.id = st.shipment_id', 'left')
+            ->orderBy('st.created_at', 'DESC')
+            ->limit(6)
+            ->get()->getResultArray();
+
+        // ---- Grafik: shipment per hari 7 hari terakhir ----
+        $chartLabels = [];
+        $chartData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date          = date('Y-m-d', strtotime("-$i days"));
+            $chartLabels[] = date('d M', strtotime($date));
+            $chartData[]   = $db->table('shipments')
+                ->where('DATE(created_at)', $date)
+                ->countAllResults();
+        }
+
+        // ---- Grafik: pendapatan per hari 7 hari terakhir ----
+        $revenueData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date          = date('Y-m-d', strtotime("-$i days"));
+            $revenueData[] = (float)($db->table('shipments')
+                ->selectSum('total_amount')
+                ->where('DATE(created_at)', $date)
+                ->get()->getRow()->total_amount ?? 0);
+        }
+
+        $data = [
+            'totalShipment'       => $totalShipment,
+            'totalPelanggan'      => $totalPelanggan,
+            'totalOutlet'         => $totalOutlet,
+            'totalPendapatan'     => $totalPendapatan,
+            'pendapatanBulanIni'  => $pendapatanBulanIni,
+            'statusCount'         => $statusCount,
+            'recentShipments'     => $recentShipments,
+            'recentTracking'      => $recentTracking,
+            'chartLabels'         => json_encode($chartLabels),
+            'chartData'           => json_encode($chartData),
+            'revenueData'         => json_encode($revenueData),
+        ];
+
+        return view('dashboard/dashboard', $data);
     }
 
     // Customer Section
@@ -206,8 +286,8 @@ class DashboardController extends BaseController
         $now = date('Y-m-d H:i:s');
 
         $pickupOutletId = session()->get('role') === 'superadmin'
-        ? $this->request->getPost('pickup_outlet_id')
-        : session()->get('outlet_id');
+            ? $this->request->getPost('pickup_outlet_id')
+            : session()->get('outlet_id');
 
         $data = [
             'awb'                     => $awb,
@@ -234,11 +314,11 @@ class DashboardController extends BaseController
             'updated_at'              => $now,
             'pickup_outlet_id'        => $pickupOutletId,
             'delivery_outlet_id'      => $this->request->getPost('delivery_outlet_id'),
-            'current_outlet_id'       => $pickupOutletId, 
-            'manifest_id'             => null,       
+            'current_outlet_id'       => $pickupOutletId,
+            'manifest_id'             => null,
             'estimated_delivery_date' => $this->request->getPost('estimated_delivery_date'),
-            'payment_status'          => $this->request->getPost('payment_status'),    
-            'cod_amount'              => $this->request->getPost('cod_amount'),        
+            'payment_status'          => $this->request->getPost('payment_status'),
+            'cod_amount'              => $this->request->getPost('cod_amount'),
         ];
 
         $shipmentModel->insert($data);
@@ -676,7 +756,281 @@ class DashboardController extends BaseController
     // Laporan Section
     public function laporan()
     {
-        return view('dashboard/laporan');
+        $db = \Config\Database::connect();
+
+        // Default range: bulan ini
+        $startDate = $this->request->getGet('start_date') ?? date('Y-m-01');
+        $endDate   = $this->request->getGet('end_date')   ?? date('Y-m-d');
+        $status    = $this->request->getGet('status')     ?? '';
+        $outletId  = $this->request->getGet('outlet_id')  ?? '';
+
+        $builder = $db->table('shipments s')
+            ->select('
+            s.id, s.awb, s.item_name, s.qty, s.weight_kg,
+            s.shipping_fee, s.insurance_fee, s.total_amount,
+            s.current_status, s.payment_status, s.created_at,
+            s.estimated_delivery_date,
+            c_sender.name   AS sender_name,
+            c_receiver.name AS receiver_name,
+            l_dest.kelurahan AS dest_kelurahan,
+            l_dest.kecamatan AS dest_kecamatan,
+            l_dest.kabupaten AS dest_kabupaten,
+            svc.name AS service_name,
+            o.name   AS outlet_name
+        ')
+            ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',   'left')
+            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id', 'left')
+            ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
+            ->join('services svc',         'svc.id = s.service_id',                 'left')
+            ->join('outlets o',            'o.id = s.pickup_outlet_id',             'left')
+            ->where('DATE(s.created_at) >=', $startDate)
+            ->where('DATE(s.created_at) <=', $endDate);
+
+        if (!empty($status)) {
+            $builder->where('s.current_status', $status);
+        }
+
+        if (!empty($outletId)) {
+            $builder->where('s.pickup_outlet_id', $outletId);
+        }
+
+        $shipments = $builder->orderBy('s.created_at', 'DESC')->get()->getResultArray();
+
+        // Summary
+        $totalShipment   = count($shipments);
+        $totalPendapatan = array_sum(array_column($shipments, 'total_amount'));
+        $totalDelivered  = count(array_filter($shipments, fn($s) => $s['current_status'] === 'delivered'));
+        $totalBerat      = array_sum(array_column($shipments, 'weight_kg'));
+
+        $outletModel = new OutletModel();
+
+        $data = [
+            'shipments'       => $shipments,
+            'totalShipment'   => $totalShipment,
+            'totalPendapatan' => $totalPendapatan,
+            'totalDelivered'  => $totalDelivered,
+            'totalBerat'      => $totalBerat,
+            'outlets'         => $outletModel->where('is_active', 1)->findAll(),
+            'startDate'       => $startDate,
+            'endDate'         => $endDate,
+            'filterStatus'    => $status,
+            'filterOutlet'    => $outletId,
+        ];
+
+        return view('dashboard/laporan', $data);
+    }
+
+    public function exportLaporan()
+    {
+        $db = \Config\Database::connect();
+
+        $startDate = $this->request->getGet('start_date') ?? date('Y-m-01');
+        $endDate   = $this->request->getGet('end_date')   ?? date('Y-m-d');
+        $status    = $this->request->getGet('status')     ?? '';
+        $outletId  = $this->request->getGet('outlet_id')  ?? '';
+
+        $builder = $db->table('shipments s')
+            ->select('
+            s.awb, s.item_name, s.qty, s.weight_kg,
+            s.shipping_fee, s.insurance_fee, s.total_amount,
+            s.current_status, s.payment_status, s.created_at,
+            c_sender.name   AS sender_name,
+            c_receiver.name AS receiver_name,
+            l_dest.kelurahan AS dest_kelurahan,
+            l_dest.kecamatan AS dest_kecamatan,
+            l_dest.kabupaten AS dest_kabupaten,
+            svc.name AS service_name,
+            o.name   AS outlet_name
+        ')
+            ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
+            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id', 'left')
+            ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
+            ->join('services svc',         'svc.id = s.service_id',                 'left')
+            ->join('outlets o',            'o.id = s.pickup_outlet_id',             'left')
+            ->where('DATE(s.created_at) >=', $startDate)
+            ->where('DATE(s.created_at) <=', $endDate);
+
+        if (!empty($status))   $builder->where('s.current_status', $status);
+        if (!empty($outletId)) $builder->where('s.pickup_outlet_id', $outletId);
+
+        $shipments = $builder->orderBy('s.created_at', 'DESC')->get()->getResultArray();
+
+        // =====================
+        // PHPSPREADSHEET
+        // =====================
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet       = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Laporan Pengiriman');
+
+        // ---- Styling helpers ----
+        $headerFill = [
+            'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+            'startColor' => ['rgb' => '1E3A5F'],
+        ];
+        $headerFont = [
+            'bold'  => true,
+            'color' => ['rgb' => 'FFFFFF'],
+            'size'  => 11,
+        ];
+        $borderAll = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color'       => ['rgb' => 'CCCCCC'],
+                ],
+            ],
+        ];
+
+        // ---- Title ----
+        $sheet->mergeCells('A1:M1');
+        $sheet->setCellValue('A1', 'LAPORAN PENGIRIMAN — HELIOSCARGO');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 14, 'color' => ['rgb' => '1E3A5F']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // ---- Subtitle periode ----
+        $sheet->mergeCells('A2:M2');
+        $sheet->setCellValue('A2', 'Periode: ' . date('d M Y', strtotime($startDate)) . ' s/d ' . date('d M Y', strtotime($endDate)));
+        $sheet->getStyle('A2')->applyFromArray([
+            'font'      => ['size' => 10, 'color' => ['rgb' => '666666']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // ---- Summary row ----
+        $totalPendapatan = array_sum(array_column($shipments, 'total_amount'));
+        $totalDelivered  = count(array_filter($shipments, fn($s) => $s['current_status'] === 'delivered'));
+
+        $sheet->mergeCells('A3:M3');
+        $sheet->setCellValue(
+            'A3',
+            'Total Shipment: ' . count($shipments) .
+                '   |   Delivered: ' . $totalDelivered .
+                '   |   Total Pendapatan: Rp ' . number_format($totalPendapatan, 0, ',', '.')
+        );
+        $sheet->getStyle('A3')->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 10],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EBF3FB']],
+        ]);
+
+        $sheet->getRowDimension(4)->setRowHeight(5); // spacer
+
+        // ---- Header kolom ----
+        $headers = [
+            'A' => 'No',
+            'B' => 'AWB',
+            'C' => 'Barang',
+            'D' => 'Pengirim',
+            'E' => 'Penerima',
+            'F' => 'Tujuan',
+            'G' => 'Service',
+            'H' => 'Outlet',
+            'I' => 'Berat (kg)',
+            'J' => 'Ongkir (Rp)',
+            'K' => 'Total (Rp)',
+            'L' => 'Status',
+            'M' => 'Tanggal',
+        ];
+
+        foreach ($headers as $col => $label) {
+            $sheet->setCellValue($col . '5', $label);
+            $sheet->getStyle($col . '5')->applyFromArray([
+                'fill' => $headerFill,
+                'font' => $headerFont,
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+        }
+        $sheet->getRowDimension(5)->setRowHeight(20);
+
+        // ---- Data rows ----
+        $row = 6;
+        $no  = 1;
+
+        // Warna status
+        $statusColors = [
+            'delivered'  => 'D4EDDA',
+            'in_transit' => 'CCE5FF',
+            'picked_up'  => 'D4EDDA',
+            'booked'     => 'FFF3CD',
+            'draft'      => 'FFF3CD',
+            'cancelled'  => 'F8D7DA',
+        ];
+
+        foreach ($shipments as $s) {
+            $tujuan = implode(', ', array_filter([
+                $s['dest_kelurahan'],
+                $s['dest_kecamatan'],
+                $s['dest_kabupaten'],
+            ]));
+
+            $rowColor = $statusColors[$s['current_status']] ?? 'FFFFFF';
+
+            $sheet->setCellValue('A' . $row, $no++);
+            $sheet->setCellValue('B' . $row, $s['awb']);
+            $sheet->setCellValue('C' . $row, $s['item_name']);
+            $sheet->setCellValue('D' . $row, $s['sender_name'] ?? '-');
+            $sheet->setCellValue('E' . $row, $s['receiver_name'] ?? '-');
+            $sheet->setCellValue('F' . $row, $tujuan);
+            $sheet->setCellValue('G' . $row, $s['service_name'] ?? '-');
+            $sheet->setCellValue('H' . $row, $s['outlet_name'] ?? '-');
+            $sheet->setCellValue('I' . $row, (float)$s['weight_kg']);
+            $sheet->setCellValue('J' . $row, (float)$s['shipping_fee']);
+            $sheet->setCellValue('K' . $row, (float)$s['total_amount']);
+            $sheet->setCellValue('L' . $row, strtoupper(str_replace('_', ' ', $s['current_status'])));
+            $sheet->setCellValue('M' . $row, date('d-m-Y H:i', strtotime($s['created_at'])));
+
+            // Warna baris berdasarkan status
+            $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+                'fill' => [
+                    'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => $rowColor],
+                ],
+            ]);
+
+            // Format angka
+            $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('0.00');
+            $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0');
+
+            $row++;
+        }
+
+        // ---- Total row ----
+        $sheet->setCellValue('J' . $row, array_sum(array_column($shipments, 'shipping_fee')));
+        $sheet->setCellValue('K' . $row, $totalPendapatan);
+        $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EBF3FB']],
+        ]);
+        $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0');
+        $sheet->setCellValue('A' . $row, 'TOTAL');
+
+        // ---- Border seluruh tabel ----
+        $sheet->getStyle('A5:M' . $row)->applyFromArray($borderAll);
+
+        // ---- Auto width kolom ----
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ---- Freeze header ----
+        $sheet->freezePane('A6');
+
+        // ---- Output ----
+        $filename = 'Laporan_Pengiriman_' . $startDate . '_sd_' . $endDate . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     // Invoice Section
@@ -694,6 +1048,51 @@ class DashboardController extends BaseController
     // Settings Section
     public function settings()
     {
-        return view('dashboard/settings');
+        $settingModel = new \App\Models\SettingModel();
+        $userModel    = new \App\Models\UserModel();
+
+        $data = [
+            'settings' => $settingModel->getAllSettings(),
+            'user'     => $userModel->find(session()->get('user_id')),
+        ];
+
+        return view('dashboard/settings', $data);
+    }
+
+    public function updateCompanySettings()
+    {
+        $settingModel = new \App\Models\SettingModel();
+
+        $settingModel->setSetting('company_name',    $this->request->getPost('company_name'));
+        $settingModel->setSetting('company_address', $this->request->getPost('company_address'));
+        $settingModel->setSetting('company_phone',   $this->request->getPost('company_phone'));
+        $settingModel->setSetting('company_email',   $this->request->getPost('company_email'));
+
+        return redirect()->to('/settings')->with('success', 'Informasi perusahaan berhasil disimpan.');
+    }
+
+    public function updateProfile()
+    {
+        $userModel = new \App\Models\UserModel();
+        $userId    = session()->get('user_id');
+
+        $fullName = $this->request->getPost('full_name');
+        $password = $this->request->getPost('password');
+
+        $data = ['full_name' => $fullName];
+
+        if (!empty($password)) {
+            if (strlen($password) < 6) {
+                return redirect()->to('/settings')->with('error', 'Password minimal 6 karakter.');
+            }
+            $data['password_hash'] = password_hash($password, PASSWORD_BCRYPT);
+        }
+
+        $userModel->update($userId, $data);
+
+        // Update session full_name
+        session()->set('full_name', $fullName);
+
+        return redirect()->to('/settings')->with('success', 'Profil berhasil diupdate.');
     }
 }
