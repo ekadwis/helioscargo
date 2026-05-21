@@ -6,17 +6,18 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 /**
  * @var RouteCollection $routes
  */
-// =====================
-// PUBLIK — tanpa login
-// =====================
-$routes->get('/', 'Home::index');
+
+// PUBLIK URL
+$routes->get('/', 'HomeController::index');
+$routes->post('/track', 'HomeController::track');
+$routes->post('/cek-tarif', 'HomeController::cekTarif');
+$routes->get('/locations/search', 'HomeController::getLocations');
+$routes->post('/contact', 'HomeController::contact');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login', 'AuthController::doLogin');
 $routes->get('/logout', 'AuthController::logout');
 
-// =====================
-// PROTECTED — butuh login
-// =====================
+// PROTECTED URL - LOGIN REQUIRED
 $routes->group('', ['filter' => 'auth'], function($routes) {
 
     $routes->get('/dashboard', 'DashboardController::dashboard');
@@ -59,9 +60,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('/settings', 'DashboardController::settings');
     $routes->post('/settings/profile', 'DashboardController::updateProfile');
 
-    // =====================
-    // SUPERADMIN ONLY
-    // =====================
+    // SUPER ADMIN SECTION
     $routes->group('', ['filter' => 'superadmin'], function($routes) {
 
         // Users Management
@@ -77,5 +76,17 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
 
         // Settings perusahaan
         $routes->post('/settings/company', 'DashboardController::updateCompanySettings');
+
+        // Promo
+        $routes->get('/promo', 'ContentController::promoIndex');
+        $routes->post('/promo/store', 'ContentController::promoStore');
+        $routes->post('/promo/update/(:num)', 'ContentController::promoUpdate/$1');
+        $routes->post('/promo/delete/(:num)', 'ContentController::promoDelete/$1');
+
+        // News
+        $routes->get('/news', 'ContentController::newsIndex');
+        $routes->post('/news/store', 'ContentController::newsStore');
+        $routes->post('/news/update/(:num)', 'ContentController::newsUpdate/$1');
+        $routes->post('/news/delete/(:num)', 'ContentController::newsDelete/$1');
     });
 });

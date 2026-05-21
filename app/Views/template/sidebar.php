@@ -66,6 +66,16 @@
                     <span>Manajemen User</span>
                 </a>
 
+                <a class="nav-item <?= ($segment1 == 'promo') ? 'active' : '' ?>" href="<?= base_url('promo') ?>">
+                    <i class="bi bi-tag-fill"></i>
+                    <span>Manajemen Promo</span>
+                </a>
+
+                <a class="nav-item <?= ($segment1 == 'news') ? 'active' : '' ?>" href="<?= base_url('news') ?>">
+                    <i class="bi bi-newspaper"></i>
+                    <span>Manajemen Berita</span>
+                </a>
+
                 <a class="nav-item <?= ($segment1 == 'laporan') ? 'active' : '' ?>" href="<?= base_url('laporan') ?>">
                     <i class="bi bi-bar-chart-fill"></i>
                     <span>Laporan</span>
