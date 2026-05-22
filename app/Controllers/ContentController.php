@@ -18,23 +18,14 @@ class ContentController extends BaseController
     {
         $data = [
             'promos' => $this->db->table('promos')
-                                  ->orderBy('id', 'DESC')
-                                  ->get()->getResultArray(),
+                ->orderBy('id', 'DESC')
+                ->get()->getResultArray(),
         ];
         return view('dashboard/promo', $data);
     }
 
     public function promoStore()
     {
-        $image = $this->request->getFile('image');
-        $imageUrl = null;
-
-        if ($image && $image->isValid() && !$image->hasMoved()) {
-            $newName = $image->getRandomName();
-            $image->move(FCPATH . 'img/promo/', $newName);
-            $imageUrl = '/img/promo/' . $newName;
-        }
-
         $this->db->table('promos')->insert([
             'title'       => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
@@ -42,7 +33,6 @@ class ContentController extends BaseController
             'badge_color' => $this->request->getPost('badge_color'),
             'valid_until' => $this->request->getPost('valid_until') ?: null,
             'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
-            'image_url'   => $imageUrl,
         ]);
 
         return redirect()->to('/promo')->with('success', 'Promo berhasil ditambahkan.');
@@ -50,21 +40,6 @@ class ContentController extends BaseController
 
     public function promoUpdate($id)
     {
-        $image    = $this->request->getFile('image');
-        $existing = $this->db->table('promos')->where('id', $id)->get()->getRowArray();
-
-        $imageUrl = $existing['image_url'] ?? null;
-
-        if ($image && $image->isValid() && !$image->hasMoved()) {
-            // Hapus gambar lama kalau ada
-            if ($imageUrl && file_exists(FCPATH . $imageUrl)) {
-                unlink(FCPATH . $imageUrl);
-            }
-            $newName  = $image->getRandomName();
-            $image->move(FCPATH . 'img/promo/', $newName);
-            $imageUrl = '/img/promo/' . $newName;
-        }
-
         $this->db->table('promos')->where('id', $id)->update([
             'title'       => $this->request->getPost('title'),
             'description' => $this->request->getPost('description'),
@@ -72,7 +47,6 @@ class ContentController extends BaseController
             'badge_color' => $this->request->getPost('badge_color'),
             'valid_until' => $this->request->getPost('valid_until') ?: null,
             'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
-            'image_url'   => $imageUrl,
         ]);
 
         return redirect()->to('/promo')->with('success', 'Promo berhasil diupdate.');
@@ -80,14 +54,7 @@ class ContentController extends BaseController
 
     public function promoDelete($id)
     {
-        $existing = $this->db->table('promos')->where('id', $id)->get()->getRowArray();
-
-        if ($existing && $existing['image_url'] && file_exists(FCPATH . ltrim($existing['image_url'], '/'))) {
-            unlink(FCPATH . ltrim($existing['image_url'], '/'));
-        }
-
         $this->db->table('promos')->where('id', $id)->delete();
-
         return redirect()->to('/promo')->with('success', 'Promo berhasil dihapus.');
     }
 
@@ -98,8 +65,8 @@ class ContentController extends BaseController
     {
         $data = [
             'news' => $this->db->table('news')
-                                ->orderBy('id', 'DESC')
-                                ->get()->getResultArray(),
+                ->orderBy('id', 'DESC')
+                ->get()->getResultArray(),
         ];
         return view('dashboard/news', $data);
     }

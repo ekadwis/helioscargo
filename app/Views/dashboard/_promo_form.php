@@ -27,10 +27,6 @@
         <input type="date" name="valid_until" class="form-control">
     </div>
     <div class="col-12">
-        <label class="form-label">Gambar <small class="text-muted">(JPG/PNG, maks 2MB)</small></label>
-        <input type="file" name="image" class="form-control" accept="image/*">
-    </div>
-    <div class="col-12">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" name="is_active" value="1" checked>
             <label class="form-check-label">Tampilkan di landing page</label>

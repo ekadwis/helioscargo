@@ -51,7 +51,7 @@ class HomeController extends BaseController
                 o.name   AS current_outlet_name
             ')
             ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
-            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id','left')
+            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id', 'left')
             ->join('locations l_origin',   'l_origin.id = s.origin_location_id',    'left')
             ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
             ->join('services svc',         'svc.id = s.service_id',                 'left')
@@ -119,9 +119,9 @@ class HomeController extends BaseController
 
         // Ambil tarif
         $tarif = $db->table('tarif')
-                    ->where('zona', $zona)
-                    ->where('service_id', $serviceId)
-                    ->get()->getRowArray();
+            ->where('zona', $zona)
+            ->where('service_id', $serviceId)
+            ->get()->getRowArray();
 
         if (!$tarif) {
             return $this->response->setJSON(['error' => 'Tarif tidak ditemukan.']);
@@ -193,5 +193,50 @@ class HomeController extends BaseController
         } else {
             return redirect()->to('/#contact')->with('contact_error', 'Gagal mengirim pesan. Coba lagi nanti.');
         }
+    }
+
+    public function trackByAwb($awb)
+    {
+        $db = \Config\Database::connect();
+
+        $shipment = $db->table('shipments s')
+            ->select('
+            s.id, s.awb, s.item_name, s.qty, s.weight_kg,
+            s.current_status, s.estimated_delivery_date,
+            s.created_at, s.total_amount, s.payment_status,
+            c_sender.name   AS sender_name,
+            c_receiver.name AS receiver_name,
+            l_origin.kelurahan AS origin_kel, l_origin.kecamatan AS origin_kec,
+            l_origin.kabupaten AS origin_kab, l_origin.provinsi  AS origin_prov,
+            l_dest.kelurahan   AS dest_kel,   l_dest.kecamatan   AS dest_kec,
+            l_dest.kabupaten   AS dest_kab,   l_dest.provinsi    AS dest_prov,
+            svc.name AS service_name,
+            o.name   AS current_outlet_name
+        ')
+            ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
+            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id', 'left')
+            ->join('locations l_origin',   'l_origin.id = s.origin_location_id',    'left')
+            ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
+            ->join('services svc',         'svc.id = s.service_id',                 'left')
+            ->join('outlets o',            'o.id = s.current_outlet_id',            'left')
+            ->where('s.awb', strtoupper($awb))
+            ->get()->getRowArray();
+
+        if (!$shipment) {
+            return redirect()->to('/')->with('track_error', 'Nomor resi <strong>' . ($awb) . '</strong> tidak ditemukan.');
+        }
+
+        $trackings = $db->table('shipment_tracking st')
+            ->select('st.status, st.description, st.created_at, l.kelurahan, l.kecamatan, l.kabupaten')
+            ->join('locations l', 'l.id = st.location_id', 'left')
+            ->where('st.shipment_id', $shipment['id'])
+            ->orderBy('st.created_at', 'ASC')
+            ->get()->getResultArray();
+
+        return view('tracking_result', [
+            'shipment'  => $shipment,
+            'trackings' => $trackings,
+            'awb'       => $awb,
+        ]);
     }
 }

@@ -16,11 +16,19 @@ $routes->post('/contact', 'HomeController::contact');
 $routes->get('/login', 'AuthController::login');
 $routes->post('/login', 'AuthController::doLogin');
 $routes->get('/logout', 'AuthController::logout');
+$routes->get('/tracking/(:any)', 'HomeController::trackByAwb/$1');
 
 // PROTECTED URL - LOGIN REQUIRED
-$routes->group('', ['filter' => 'auth'], function($routes) {
+$routes->group('', ['filter' => 'auth'], function ($routes) {
 
     $routes->get('/dashboard', 'DashboardController::dashboard');
+
+    // Scanner
+    $routes->get('/scan', 'ScanController::index');
+    $routes->post('/scan/process', 'ScanController::process');
+
+    // Resi PDF
+    $routes->get('/shipment/resi/(:num)', 'DashboardController::cetakResi/$1');
 
     // Customer Section
     $routes->get('/pelanggan', 'DashboardController::dataPelanggan');
@@ -61,7 +69,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->post('/settings/profile', 'DashboardController::updateProfile');
 
     // SUPER ADMIN SECTION
-    $routes->group('', ['filter' => 'superadmin'], function($routes) {
+    $routes->group('', ['filter' => 'superadmin'], function ($routes) {
 
         // Users Management
         $routes->get('/users', 'UserController::index');

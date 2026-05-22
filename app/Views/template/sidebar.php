@@ -26,6 +26,11 @@
             $segment2 = $uri->getSegment(2);
             ?>
 
+            <a class="nav-item <?= ($segment1 == 'scan') ? 'active' : '' ?>" href="<?= base_url('scan') ?>">
+                <i class="bi bi-upc-scan"></i>
+                <span>Scan Center</span>
+            </a>
+
             <a class="nav-item <?= ($segment1 == 'dashboard' || $segment1 == '') ? 'active' : '' ?>" href="<?= base_url('dashboard') ?>">
                 <i class="bi bi-grid-1x2-fill"></i>
                 <span>Dashboard</span>

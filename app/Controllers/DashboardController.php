@@ -1033,7 +1033,7 @@ class DashboardController extends BaseController
         exit;
     }
 
-    // Invoice Section
+    // Resi Section
     public function invoice()
     {
         return view('dashboard/invoice');
@@ -1095,4 +1095,63 @@ class DashboardController extends BaseController
 
         return redirect()->to('/settings')->with('success', 'Profil berhasil diupdate.');
     }
+
+    // Resi Section
+    public function cetakResi($id)
+{
+    $db = \Config\Database::connect();
+
+    $shipment = $db->table('shipments s')
+        ->select('
+            s.*, 
+            c_sender.name   AS sender_name,   c_sender.phone   AS sender_phone,
+            c_sender.address AS sender_address,
+            c_receiver.name AS receiver_name, c_receiver.phone AS receiver_phone,
+            c_receiver.address AS receiver_address,
+            l_origin.kelurahan AS origin_kel, l_origin.kecamatan AS origin_kec,
+            l_origin.kabupaten AS origin_kab, l_origin.provinsi  AS origin_prov,
+            l_dest.kelurahan   AS dest_kel,   l_dest.kecamatan   AS dest_kec,
+            l_dest.kabupaten   AS dest_kab,   l_dest.provinsi    AS dest_prov,
+            l_dest.kodepos     AS dest_kodepos,
+            svc.name AS service_name, svc.sla_days_min, svc.sla_days_max,
+            o.name AS outlet_name
+        ')
+        ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
+        ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id','left')
+        ->join('locations l_origin',   'l_origin.id = s.origin_location_id',    'left')
+        ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
+        ->join('services svc',         'svc.id = s.service_id',                 'left')
+        ->join('outlets o',            'o.id = s.pickup_outlet_id',             'left')
+        ->where('s.id', $id)
+        ->get()->getRowArray();
+
+    if (!$shipment) {
+        return redirect()->to('/shipment')->with('error', 'Shipment tidak ditemukan.');
+    }
+
+    // Generate barcode AWB
+    $barcodeGenerator = new \Picqer\Barcode\BarcodeGeneratorHTML();
+    $barcode = $barcodeGenerator->getBarcode($shipment['awb'], $barcodeGenerator::TYPE_CODE_128, 2, 60);
+
+    // Generate QR code URL tracking
+    $trackingUrl = base_url('tracking/' . $shipment['awb']);
+    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($trackingUrl);
+
+    // Generate PDF pakai DomPDF
+    $dompdf = new \Dompdf\Dompdf();
+    $dompdf->getOptions()->setChroot(FCPATH);
+    $dompdf->getOptions()->setIsRemoteEnabled(true);
+
+    $html = view('pdf/resi', [
+        'shipment' => $shipment,
+        'barcode'  => $barcode,
+        'qrUrl'    => $qrUrl,
+    ]);
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper([0, 0, 226.77, 566.93], 'portrait'); // 8cm x 20cm
+    $dompdf->render();
+    $dompdf->stream('Resi_' . $shipment['awb'] . '.pdf', ['Attachment' => false]);
+    exit;
+}
 }

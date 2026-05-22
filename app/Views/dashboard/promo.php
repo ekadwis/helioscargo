@@ -31,7 +31,6 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Gambar</th>
                             <th>Judul</th>
                             <th>Deskripsi</th>
                             <th>Badge</th>
@@ -46,13 +45,6 @@
                             <?php foreach ($promos as $p) : ?>
                                 <tr>
                                     <td><?= $no++ ?></td>
-                                    <td>
-                                        <?php if ($p['image_url']) : ?>
-                                            <img src="<?= $p['image_url'] ?>" alt="" style="width:60px;height:40px;object-fit:cover;border-radius:6px;">
-                                        <?php else : ?>
-                                            <span class="text-muted small">-</span>
-                                        <?php endif; ?>
-                                    </td>
                                     <td><strong><?= $p['title'] ?></strong></td>
                                     <td><small><?= substr($p['description'], 0, 60) ?>...</small></td>
                                     <td>
@@ -73,13 +65,12 @@
                                     <td>
                                         <button type="button" class="btn btn-sm btn-warning btn-edit-promo"
                                             data-id="<?= $p['id'] ?>"
-                                            data-title="<?= esc($p['title']) ?>"
-                                            data-description="<?= esc($p['description']) ?>"
-                                            data-badge_text="<?= esc($p['badge_text']) ?>"
+                                            data-title="<?= ($p['title']) ?>"
+                                            data-description="<?= ($p['description']) ?>"
+                                            data-badge_text="<?= ($p['badge_text']) ?>"
                                             data-badge_color="<?= $p['badge_color'] ?>"
                                             data-valid_until="<?= $p['valid_until'] ?>"
-                                            data-is_active="<?= $p['is_active'] ?>"
-                                            data-image="<?= $p['image_url'] ?>">
+                                            data-is_active="<?= $p['is_active'] ?>">
                                             Edit
                                         </button>
                                         <form action="/promo/delete/<?= $p['id'] ?>" method="post" class="d-inline">
@@ -104,7 +95,7 @@
 <div class="modal fade" id="addPromoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form action="/promo/store" method="post" enctype="multipart/form-data">
+            <form action="/promo/store" method="post">
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title">Tambah Promo</h5>
@@ -126,7 +117,7 @@
 <div class="modal fade" id="editPromoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form id="editPromoForm" method="post" enctype="multipart/form-data">
+            <form id="editPromoForm" method="post">
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Promo</h5>

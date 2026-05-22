@@ -5,7 +5,7 @@
 
     <?php
     // Helper lookup
-    $findById = function($arr, $id, $field) {
+    $findById = function ($arr, $id, $field) {
         foreach ($arr as $item) {
             if ($item['id'] == $id) return $item[$field] ?? '-';
         }
@@ -42,7 +42,9 @@
                             <p class="text-muted small mb-3"><?= $findById($locations, $shipment['destination_location_id'], 'kelurahan') ?>, <?= $findById($locations, $shipment['destination_location_id'], 'kecamatan') ?></p>
                         </div>
 
-                        <div class="col-12"><hr></div>
+                        <div class="col-12">
+                            <hr>
+                        </div>
 
                         <div class="col-md-4 mb-3">
                             <small class="text-muted">Barang</small>
@@ -81,7 +83,9 @@
                             <p class="mb-0"><strong><?= $shipment['estimated_delivery_date'] ? date('d-m-Y', strtotime($shipment['estimated_delivery_date'])) : '-' ?></strong></p>
                         </div>
 
-                        <div class="col-12"><hr></div>
+                        <div class="col-12">
+                            <hr>
+                        </div>
 
                         <div class="col-md-4 mb-3">
                             <small class="text-muted">Pickup Outlet</small>
@@ -96,7 +100,9 @@
                             <p class="mb-0"><strong><?= $findById($outlets, $shipment['current_outlet_id'], 'name') ?></strong></p>
                         </div>
 
-                        <div class="col-12"><hr></div>
+                        <div class="col-12">
+                            <hr>
+                        </div>
 
                         <div class="col-md-4 mb-3">
                             <small class="text-muted">Ongkir</small>
@@ -123,15 +129,18 @@
                             </p>
                         </div>
                         <?php if ($shipment['payment_status'] === 'cod') : ?>
-                        <div class="col-md-4 mb-3">
-                            <small class="text-muted">COD Amount</small>
-                            <p class="mb-0"><strong>Rp <?= number_format($shipment['cod_amount'], 0, ',', '.') ?></strong></p>
-                        </div>
+                            <div class="col-md-4 mb-3">
+                                <small class="text-muted">COD Amount</small>
+                                <p class="mb-0"><strong>Rp <?= number_format($shipment['cod_amount'], 0, ',', '.') ?></strong></p>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
                 <div class="card-footer d-flex gap-2">
                     <a href="/shipment/edit/<?= $shipment['id'] ?>" class="btn btn-warning">Edit Shipment</a>
+                    <a href="/shipment/resi/<?= $shipment['id'] ?>" class="btn btn-success" target="_blank">
+                        <i class="bi bi-printer me-1"></i> Cetak Resi
+                    </a>
                     <a href="/shipment" class="btn btn-light-secondary">Kembali</a>
                 </div>
             </div>
