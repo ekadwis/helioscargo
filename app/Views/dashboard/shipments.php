@@ -416,15 +416,20 @@
         // HITUNG ONGKIR
         // =====================
         function hitungOngkir() {
-            let service = $('#service_id option:selected').data('name');
+            let originId = $('#origin_location_id').val();
+            let destId = $('#destination_location_id').val();
+            let serviceId = $('#service_id').val();
             let berat = $('#weight_kg').val();
-            if (!service || !berat) return;
+            if (!originId || !destId || !serviceId || !berat) return;
 
             $.ajax({
                 url: '/cek_ongkir',
                 method: 'POST',
                 data: {
-                    service: service,
+                    [$('meta[name=csrf-token-name]').attr('content')]: $('meta[name=csrf-token-hash]').attr('content'),
+                    origin_id: originId,
+                    dest_id: destId,
+                    service_id: serviceId,
                     berat: berat
                 },
                 success: function(res) {
@@ -441,7 +446,7 @@
             });
         }
 
-        $('#service_id, #weight_kg').on('change keyup', function() {
+        $('#service_id, #weight_kg, #origin_location_id, #destination_location_id').on('change keyup', function() {
             hitungOngkir();
         });
 

@@ -169,11 +169,11 @@ class HomeController extends BaseController
 
     public function contact()
     {
-        $name    = $this->request->getPost('name');
-        $email   = $this->request->getPost('email');
-        $message = $this->request->getPost('message');
+        $name    = trim(str_replace(["\r", "\n"], '', (string) $this->request->getPost('name')));
+        $email   = trim(str_replace(["\r", "\n"], '', (string) $this->request->getPost('email')));
+        $message = (string) $this->request->getPost('message');
 
-        if (empty($name) || empty($email) || empty($message)) {
+        if (empty($name) || empty($email) || empty($message) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return redirect()->to('/')->with('contact_error', 'Semua field wajib diisi.');
         }
 
@@ -223,7 +223,7 @@ class HomeController extends BaseController
             ->get()->getRowArray();
 
         if (!$shipment) {
-            return redirect()->to('/')->with('track_error', 'Nomor resi <strong>' . ($awb) . '</strong> tidak ditemukan.');
+            return redirect()->to('/')->with('track_error', 'Nomor resi <strong>' . esc($awb) . '</strong> tidak ditemukan.');
         }
 
         $trackings = $db->table('shipment_tracking st')

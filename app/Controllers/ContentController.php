@@ -73,6 +73,14 @@ class ContentController extends BaseController
 
     public function newsStore()
     {
+        // --- VALIDASI UPLOAD: hanya gambar, maks 2MB ---
+        if (! $this->validate([
+            'title' => 'required|min_length[3]',
+            'image' => 'permit_empty|is_image[image]|max_size[image,2048]|ext_in[image,jpg,jpeg,png,webp]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]',
+        ])) {
+            return redirect()->back()->withInput()->with('error', $this->validator->getErrors());
+        }
+
         $image    = $this->request->getFile('image');
         $imageUrl = null;
 
@@ -106,6 +114,14 @@ class ContentController extends BaseController
 
     public function newsUpdate($id)
     {
+        // --- VALIDASI UPLOAD: gambar opsional, tapi kalau ada harus valid ---
+        if (! $this->validate([
+            'title' => 'required|min_length[3]',
+            'image' => 'permit_empty|is_image[image]|max_size[image,2048]|ext_in[image,jpg,jpeg,png,webp]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]',
+        ])) {
+            return redirect()->back()->withInput()->with('error', $this->validator->getErrors());
+        }
+
         $image    = $this->request->getFile('image');
         $existing = $this->db->table('news')->where('id', $id)->get()->getRowArray();
         $imageUrl = $existing['image_url'] ?? null;

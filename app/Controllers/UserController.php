@@ -33,8 +33,14 @@ class UserController extends BaseController
     {
         $userModel = new UserModel();
 
-        // Superadmin bisa buat semua role
-        // Admin hanya bisa buat role admin (di sini kita handle di view saja)
+        if (! $this->validate([
+            'username' => 'required|min_length[3]|alpha_numeric_punct',
+            'password' => 'required|min_length[6]',
+            'full_name' => 'required|min_length[3]',
+            'role'     => 'required|in_list[admin,superadmin]',
+        ])) {
+            return redirect()->to('/users')->with('error', $this->validator->getErrors());
+        }
 
         $data = [
             'outlet_id'     => $this->request->getPost('outlet_id'),

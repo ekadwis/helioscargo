@@ -275,9 +275,10 @@ class DashboardController extends BaseController
                 ->with('error', 'Lokasi asal dan tujuan harus dipilih dari daftar yang tersedia.');
         }
 
-        $lastShipment = $shipmentModel->orderBy('id', 'DESC')->first();
-        $nextId = $lastShipment ? ((int)$lastShipment['id'] + 1) : 1;
-        $awb = 'AWB' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+        // $lastShipment = $shipmentModel->orderBy('id', 'DESC')->first();
+        // $nextId = $lastShipment ? ((int)$lastShipment['id'] + 1) : 1;
+        // $awb = 'AWB' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
+        $awb = null;
 
         $shippingFee  = (float) $this->request->getPost('shipping_fee');
         $insuranceFee = (float) $this->request->getPost('insurance_fee');
@@ -290,7 +291,7 @@ class DashboardController extends BaseController
             : session()->get('outlet_id');
 
         $data = [
-            'awb'                     => $awb,
+            'awb'                     => 'TMP-' . uniqid(),
             'created_by_user_id'      => session()->get('user_id'),
             'sender_customer_id'      => $this->request->getPost('sender_customer_id'),
             'receiver_customer_id'    => $this->request->getPost('receiver_customer_id'),
@@ -323,6 +324,10 @@ class DashboardController extends BaseController
 
         $shipmentModel->insert($data);
         $shipmentId = $shipmentModel->getInsertID();
+
+        // AWB final dibuat dari ID asli hasil insert
+        $awb = 'AWB' . str_pad($shipmentId, 6, '0', STR_PAD_LEFT);
+        $shipmentModel->update($shipmentId, ['awb' => $awb]);
 
         $trackingData = [
             'shipment_id'         => $shipmentId,
@@ -494,6 +499,10 @@ class DashboardController extends BaseController
         $status      = $this->request->getPost('status');
         $description = $this->request->getPost('description');
 
+        if (empty($shipment_id) || !is_numeric($shipment_id)) {
+            return redirect()->back()->with('error', 'Shipment ID tidak valid.');
+        }
+
         // Map status tracking ke status shipment (enum di tabel shipments)
         $statusMap = [
             'picked_up'        => 'picked_up',
@@ -517,11 +526,6 @@ class DashboardController extends BaseController
         ]);
 
 
-
-        if (empty($shipment_id) || !is_numeric($shipment_id)) {
-            return redirect()->back()->with('error', 'Shipment ID tidak valid.');
-        }
-
         // Update current_status di shipments
         $shipmentStatus = $statusMap[$status] ?? null;
         if ($shipmentStatus) {
@@ -535,46 +539,55 @@ class DashboardController extends BaseController
 
     public function cek_ongkir()
     {
-        $service = $this->request->getPost('service');
-        $berat   = (float) $this->request->getPost('berat');
+        $db = \Config\Database::connect();
 
-        if (!$service || !$berat) {
-            return $this->response->setJSON([
-                'error' => 'Service dan berat wajib diisi'
-            ]);
+        $originId  = $this->request->getPost('origin_id');
+        $destId    = $this->request->getPost('dest_id');
+        $serviceId = $this->request->getPost('service_id');
+        $berat     = (float) $this->request->getPost('berat');
+
+        if (!$originId || !$destId || !$serviceId || !$berat) {
+            return $this->response->setJSON(['error' => 'Lokasi asal, tujuan, service, dan berat wajib diisi.']);
         }
 
-        $berat = ceil($berat);
+        $origin = $db->table('locations')->where('id', $originId)->get()->getRowArray();
+        $dest   = $db->table('locations')->where('id', $destId)->get()->getRowArray();
 
-        // Range harga berdasarkan service
-        switch ($service) {
-            case 'economy':
-                $min = 10000;
-                $max = 20000;
-                break;
-            case 'regular':
-                $min = 15000;
-                $max = 25000;
-                break;
-            case 'express':
-                $min = 20000;
-                $max = 35000;
-                break;
-            default:
-                $min = 10000;
-                $max = 15000;
+        if (!$origin || !$dest) {
+            return $this->response->setJSON(['error' => 'Lokasi tidak valid.']);
         }
 
-        // Random + pembulatan
-        $harga = rand($min, $max);
-        $harga = round($harga / 500) * 500;
+        // Tentukan zona (logika sama persis dengan halaman publik / cekTarif)
+        $zonaJawa = ['DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten'];
 
-        $total = $harga * $berat;
+        if ($origin['kabupaten'] === $dest['kabupaten']) {
+            $zona = 'lokal';
+        } elseif ($origin['provinsi'] === $dest['provinsi']) {
+            $zona = 'antar_kota';
+        } elseif (in_array($origin['provinsi'], $zonaJawa) && in_array($dest['provinsi'], $zonaJawa)) {
+            $zona = 'antar_provinsi';
+        } else {
+            $zona = 'luar_jawa';
+        }
+
+        $tarif = $db->table('tarif')
+            ->where('zona', $zona)
+            ->where('service_id', $serviceId)
+            ->get()->getRowArray();
+
+        if (!$tarif) {
+            return $this->response->setJSON(['error' => 'Tarif untuk zona/service ini belum diset.']);
+        }
+
+        $beratAktual = ceil($berat);
+        $hargaPerKg  = (float) $tarif['harga_per_kg'];
+        $total       = $hargaPerKg * $beratAktual;
 
         return $this->response->setJSON([
-            'harga_per_kg' => $harga,
-            'berat'        => $berat,
-            'total'        => $total
+            'zona'         => str_replace('_', ' ', $zona),
+            'harga_per_kg' => $hargaPerKg,
+            'berat'        => $beratAktual,
+            'total'        => $total,
         ]);
     }
 
@@ -648,7 +661,7 @@ class DashboardController extends BaseController
                 'manifest_id'  => $manifestId,
                 'shipment_id'  => $sid,
                 'scanned_at'   => date('Y-m-d H:i:s'),
-                'scanned_by'   => 1,
+                'scanned_by'   => session()->get('user_id'),
             ]);
 
             $shipmentModel->update($sid, [
@@ -1098,11 +1111,11 @@ class DashboardController extends BaseController
 
     // Resi Section
     public function cetakResi($id)
-{
-    $db = \Config\Database::connect();
+    {
+        $db = \Config\Database::connect();
 
-    $shipment = $db->table('shipments s')
-        ->select('
+        $shipment = $db->table('shipments s')
+            ->select('
             s.*, 
             c_sender.name   AS sender_name,   c_sender.phone   AS sender_phone,
             c_sender.address AS sender_address,
@@ -1116,42 +1129,42 @@ class DashboardController extends BaseController
             svc.name AS service_name, svc.sla_days_min, svc.sla_days_max,
             o.name AS outlet_name
         ')
-        ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
-        ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id','left')
-        ->join('locations l_origin',   'l_origin.id = s.origin_location_id',    'left')
-        ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
-        ->join('services svc',         'svc.id = s.service_id',                 'left')
-        ->join('outlets o',            'o.id = s.pickup_outlet_id',             'left')
-        ->where('s.id', $id)
-        ->get()->getRowArray();
+            ->join('customers c_sender',   'c_sender.id = s.sender_customer_id',    'left')
+            ->join('customers c_receiver', 'c_receiver.id = s.receiver_customer_id', 'left')
+            ->join('locations l_origin',   'l_origin.id = s.origin_location_id',    'left')
+            ->join('locations l_dest',     'l_dest.id = s.destination_location_id', 'left')
+            ->join('services svc',         'svc.id = s.service_id',                 'left')
+            ->join('outlets o',            'o.id = s.pickup_outlet_id',             'left')
+            ->where('s.id', $id)
+            ->get()->getRowArray();
 
-    if (!$shipment) {
-        return redirect()->to('/shipment')->with('error', 'Shipment tidak ditemukan.');
+        if (!$shipment) {
+            return redirect()->to('/shipment')->with('error', 'Shipment tidak ditemukan.');
+        }
+
+        // Generate barcode AWB
+        $barcodeGenerator = new \Picqer\Barcode\BarcodeGeneratorHTML();
+        $barcode = $barcodeGenerator->getBarcode($shipment['awb'], $barcodeGenerator::TYPE_CODE_128, 2, 60);
+
+        // Generate QR code URL tracking
+        $trackingUrl = base_url('tracking/' . $shipment['awb']);
+        $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($trackingUrl);
+
+        // Generate PDF pakai DomPDF
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->getOptions()->setChroot(FCPATH);
+        $dompdf->getOptions()->setIsRemoteEnabled(true);
+
+        $html = view('pdf/resi', [
+            'shipment' => $shipment,
+            'barcode'  => $barcode,
+            'qrUrl'    => $qrUrl,
+        ]);
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper([0, 0, 226.77, 566.93], 'portrait'); // 8cm x 20cm
+        $dompdf->render();
+        $dompdf->stream('Resi_' . $shipment['awb'] . '.pdf', ['Attachment' => false]);
+        exit;
     }
-
-    // Generate barcode AWB
-    $barcodeGenerator = new \Picqer\Barcode\BarcodeGeneratorHTML();
-    $barcode = $barcodeGenerator->getBarcode($shipment['awb'], $barcodeGenerator::TYPE_CODE_128, 2, 60);
-
-    // Generate QR code URL tracking
-    $trackingUrl = base_url('tracking/' . $shipment['awb']);
-    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($trackingUrl);
-
-    // Generate PDF pakai DomPDF
-    $dompdf = new \Dompdf\Dompdf();
-    $dompdf->getOptions()->setChroot(FCPATH);
-    $dompdf->getOptions()->setIsRemoteEnabled(true);
-
-    $html = view('pdf/resi', [
-        'shipment' => $shipment,
-        'barcode'  => $barcode,
-        'qrUrl'    => $qrUrl,
-    ]);
-
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper([0, 0, 226.77, 566.93], 'portrait'); // 8cm x 20cm
-    $dompdf->render();
-    $dompdf->stream('Resi_' . $shipment['awb'] . '.pdf', ['Attachment' => false]);
-    exit;
-}
 }
