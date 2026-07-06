@@ -14,7 +14,7 @@ class SettingModel extends Model
 
     protected $useTimestamps = false;
 
-    // Helper: ambil semua settings jadi key-value array
+    // Ubah format data settings dari database menjadi array berpasangan key dan value agar lebih gampang dipakai
     public function getAllSettings(): array
     {
         $rows = $this->findAll();
@@ -25,7 +25,7 @@ class SettingModel extends Model
         return $result;
     }
 
-    // Helper: update atau insert setting
+    // Simpan pengaturan baru, kalau pengaturan (key) sudah ada maka akan di-update valuenya
     public function setSetting(string $key, string $value): void
     {
         $existing = $this->where('key', $key)->first();

@@ -20,7 +20,6 @@
             --orange-hover: #ea580c;
         }
 
-        /* NAVBAR */
         .navbar-custom { background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
         .navbar-brand-logo { font-weight: 800; font-size: 1.4rem; color: var(--navy); letter-spacing: -0.5px; }
         .navbar-brand-logo span { color: var(--orange); }
@@ -29,7 +28,6 @@
         .btn-login { background: var(--navy); color: #fff; border-radius: 8px; padding: 0.4rem 1.2rem; font-weight: 600; }
         .btn-login:hover { background: var(--navy-light); color: #fff; }
 
-        /* HERO */
         .hero-section {
             background: linear-gradient(135deg, var(--navy) 0%, #162d4a 60%, #0f1f35 100%);
             min-height: 90vh;
@@ -82,7 +80,6 @@
         }
         .hero-float-card:hover { transform: translateY(-4px); }
 
-        /* TRACKING SECTION */
         .section-track { background: #f8fafc; padding: 80px 0; }
         .track-card { background: #fff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 2.5rem; }
         .track-input { border: 2px solid #e2e8f0; border-radius: 12px; padding: 0.85rem 1.2rem; font-size: 1rem; transition: border .2s; }
@@ -90,7 +87,6 @@
         .btn-track { background: var(--navy); color: #fff; border-radius: 12px; padding: 0.85rem 2rem; font-weight: 700; border: none; transition: all .3s; }
         .btn-track:hover { background: var(--navy-light); transform: translateY(-2px); color: #fff; }
 
-        /* CEK TARIF */
         .section-tarif { padding: 80px 0; }
         .tarif-card { background: #fff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); padding: 2.5rem; }
         .tarif-result { background: linear-gradient(135deg, var(--navy), var(--navy-light)); color: #fff; border-radius: 16px; padding: 1.5rem 2rem; margin-top: 1.5rem; display: none; }
@@ -100,57 +96,48 @@
         .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 44px; color: #333; }
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: 46px; }
 
-        /* LAYANAN */
         .section-layanan { background: #f8fafc; padding: 80px 0; }
         .service-card { background: #fff; border-radius: 20px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 2px solid transparent; transition: all .3s; height: 100%; }
         .service-card:hover { border-color: var(--navy); transform: translateY(-6px); box-shadow: 0 15px 40px rgba(30,58,95,0.15); }
         .service-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--navy), var(--navy-light)); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem; font-size: 1.6rem; color: #fff; }
         .service-badge { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
 
-        /* PROMO */
         .section-promo { padding: 80px 0; }
         .promo-card { border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: none; height: 100%; transition: transform .3s; background: #fff; border-left: 4px solid var(--orange); }
         .promo-card:hover { transform: translateY(-4px); }
 
-        /* NEWS */
         .section-news { background: #f8fafc; padding: 80px 0; }
         .news-card { border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: none; height: 100%; transition: transform .3s; }
         .news-card:hover { transform: translateY(-6px); box-shadow: 0 15px 40px rgba(0,0,0,0.12); }
         .news-card img { height: 200px; object-fit: cover; width: 100%; }
 
-        /* CONTACT */
         .section-contact { padding: 80px 0; }
         .contact-form-input { border: 2px solid #e2e8f0; border-radius: 12px; padding: 0.75rem 1rem; transition: border .2s; width: 100%; }
         .contact-form-input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 4px rgba(30,58,95,0.1); }
         .contact-info-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
         .contact-info-icon { width: 44px; height: 44px; background: linear-gradient(135deg, var(--navy), var(--navy-light)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; flex-shrink: 0; }
 
-        /* SECTION TITLE */
         .section-title { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; color: var(--navy); margin-bottom: 0.5rem; }
         .section-subtitle { color: #64748b; font-size: 1rem; }
         .section-divider { width: 50px; height: 4px; background: var(--orange); border-radius: 2px; margin: 0.8rem auto 1.5rem; }
 
-        /* FOOTER */
         .footer { background: #0f1f35; color: rgba(255,255,255,0.75); padding: 60px 0 30px; }
         .footer-brand { font-size: 1.5rem; font-weight: 800; color: #fff; }
         .footer-brand span { color: var(--orange); }
         .footer-link { color: rgba(255,255,255,0.6); text-decoration: none; display: block; margin-bottom: 0.5rem; transition: color .2s; }
         .footer-link:hover { color: #fb923c; }
 
-        /* ANIMATIONS */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-up { animation: fadeInUp .6s ease forwards; }
 
-        /* ALERT */
         .alert-track { border-radius: 12px; border: none; }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
     <div class="container">
         <a class="navbar-brand navbar-brand-logo" href="/">
@@ -175,7 +162,6 @@
     </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero-section" id="home">
     <div class="container position-relative" style="z-index:2;">
         <div class="row align-items-center g-5">
@@ -259,7 +245,6 @@
     </div>
 </section>
 
-<!-- TRACKING -->
 <section class="section-track" id="tracking">
     <div class="container">
         <div class="text-center mb-5">
@@ -302,7 +287,6 @@
     </div>
 </section>
 
-<!-- CEK TARIF -->
 <section class="section-tarif" id="tarif">
     <div class="container">
         <div class="text-center mb-5">
@@ -379,7 +363,6 @@
     </div>
 </section>
 
-<!-- LAYANAN -->
 <section class="section-layanan" id="layanan">
     <div class="container">
         <div class="text-center mb-5">
@@ -416,7 +399,6 @@
     </div>
 </section>
 
-<!-- PROMO -->
 <section class="section-promo" id="promo">
     <div class="container">
         <div class="text-center mb-5">
@@ -448,7 +430,6 @@
     </div>
 </section>
 
-<!-- BERITA -->
 <section class="section-news" id="berita">
     <div class="container">
         <div class="text-center mb-5">
@@ -478,7 +459,6 @@
     </div>
 </section>
 
-<!-- CONTACT -->
 <section class="section-contact" id="contact">
     <div class="container">
         <div class="text-center mb-5">
@@ -562,7 +542,6 @@
     </div>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer">
     <div class="container">
         <div class="row g-4 mb-4">
@@ -607,7 +586,7 @@
 <script>
 $(document).ready(function() {
 
-    // Select2 AJAX untuk lokasi
+    // Inisialisasi Select2 untuk kolom lokasi (asal dan tujuan) dengan fitur pencarian AJAX
     function initLocationSelect(selector, placeholder) {
         $(selector).select2({
             placeholder: placeholder,
@@ -627,7 +606,7 @@ $(document).ready(function() {
     initLocationSelect('#originSelect', 'Ketik nama kota/kelurahan asal...');
     initLocationSelect('#destSelect',   'Ketik nama kota/kelurahan tujuan...');
 
-    // Cek Tarif
+    // Logika untuk tombol "Cek Tarif"
     $('#btnCekTarif').on('click', function() {
         const originId  = $('#originSelect').val();
         const destId    = $('#destSelect').val();
@@ -679,7 +658,7 @@ $(document).ready(function() {
         });
     });
 
-    // Smooth scroll navbar
+    // Efek smooth scroll saat klik link navigasi di navbar
     $('a[href^="#"]').on('click', function(e) {
         const target = $($(this).attr('href'));
         if (target.length) {

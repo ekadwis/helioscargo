@@ -24,7 +24,7 @@ body {
   overflow: hidden;
 }
 
-/* Sidebar Styles */
+/* Gaya khusus untuk area Sidebar (menu kiri) */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -163,7 +163,7 @@ body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Main Content Area */
+/* Area Konten Utama */
 .main-content {
   flex: 1;
   display: flex;
@@ -172,7 +172,7 @@ body {
   min-width: 0;
 }
 
-/* Top Navbar */
+/* Navbar bagian atas (header) */
 .top-navbar {
   background: white;
   padding: 1rem 1.5rem;
@@ -282,7 +282,7 @@ body {
   border-radius: 50%;
 }
 
-/* Content Area */
+/* Area pembungkus konten utama */
 .content-area {
   flex: 1;
   padding: 1.5rem;
@@ -290,7 +290,7 @@ body {
   background: var(--bg-light);
 }
 
-/* Dashboard Stats */
+/* Kartu statistik di halaman dashboard */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -375,7 +375,7 @@ body {
   color: #64748b;
 }
 
-/* Content Grid */
+/* Layout grid untuk menata letak konten */
 .content-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -421,7 +421,7 @@ body {
   padding: 1.5rem;
 }
 
-/* Table Styles */
+/* Gaya untuk tampilan tabel data */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -478,7 +478,7 @@ body {
   color: #a855f7;
 }
 
-/* Activity List */
+/* Daftar aktivitas atau riwayat terbaru */
 .activity-list {
   display: flex;
   flex-direction: column;
@@ -535,7 +535,7 @@ body {
   color: #94a3b8;
 }
 
-/* Quick Actions */
+/* Tombol aksi cepat */
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -572,7 +572,7 @@ body {
   font-weight: 500;
 }
 
-/* Footer */
+/* Bagian Footer */
 .dashboard-footer {
   padding: 1rem 1.5rem;
   background: white;
@@ -582,7 +582,7 @@ body {
   color: #64748b;
 }
 
-/* Page Content Sections */
+/* Section halaman konten yang aktif/non-aktif */
 .page-content {
   display: none;
 }
@@ -591,7 +591,7 @@ body {
   display: block;
 }
 
-/* Form Styles */
+/* Gaya elemen formulir dan input */
 .form-section {
   background: white;
   border-radius: 16px;
@@ -667,7 +667,7 @@ body {
   background: var(--border-color);
 }
 
-/* Data Table Page */
+/* Header dan filter di halaman data tabel */
 .table-header {
   display: flex;
   align-items: center;
@@ -688,7 +688,7 @@ body {
   cursor: pointer;
 }
 
-/* Mobile Menu Overlay */
+/* Overlay saat menu dibuka di layar ponsel */
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -700,7 +700,7 @@ body {
   z-index: 999;
 }
 
-/* Responsive Styles */
+/* Aturan responsif untuk menyesuaikan berbagai ukuran layar */
 @media (max-width: 1200px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);

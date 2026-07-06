@@ -35,13 +35,13 @@ class ShipmentModel extends Model
         'current_status',
         'created_at',
         'updated_at',
-        'pickup_outlet_id',         // Tambahkan ini
-        'delivery_outlet_id',       // Tambahkan ini
-        'current_outlet_id',        // Tambahkan ini
-        'manifest_id',              // Tambahkan ini
-        'estimated_delivery_date',  // Tambahkan ini
-        'payment_status',           // Tambahkan ini
-        'cod_amount',               // Tambahkan ini
+        'pickup_outlet_id',
+        'delivery_outlet_id',
+        'current_outlet_id',
+        'manifest_id',
+        'estimated_delivery_date',
+        'payment_status',
+        'cod_amount',
     ];
 
     protected bool $allowEmptyInserts = false;

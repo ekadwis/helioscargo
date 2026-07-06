@@ -51,7 +51,7 @@ class UserController extends BaseController
             'is_active'     => 1,
         ];
 
-        // Cek username sudah ada
+        // Pastikan username yang mau didaftarkan belum dipakai orang lain
         $existing = $userModel->where('username', $data['username'])->first();
         if ($existing) {
             return redirect()->to('/users')->with('error', 'Username sudah digunakan.');
@@ -86,7 +86,7 @@ class UserController extends BaseController
             'is_active' => $this->request->getPost('is_active') ? 1 : 0,
         ];
 
-        // Ganti password hanya kalau diisi
+        // Update password cuma kalau inputan password diisi, kalau kosong biarkan yang lama
         $newPassword = $this->request->getPost('password');
         if (!empty($newPassword)) {
             $data['password_hash'] = password_hash($newPassword, PASSWORD_BCRYPT);
@@ -101,7 +101,7 @@ class UserController extends BaseController
     {
         $userModel = new UserModel();
 
-        // Jangan hapus diri sendiri
+        // Cegah user menghapus akunnya sendiri yang sedang aktif
         if ($id == session()->get('user_id')) {
             return redirect()->to('/users')->with('error', 'Tidak bisa menghapus akun sendiri.');
         }

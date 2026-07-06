@@ -352,9 +352,7 @@
 <script>
     $(document).ready(function() {
 
-        // =====================
-        // TABLE + PAGINATION
-        // =====================
+        // Inisialisasi tabel dan pagination untuk daftar shipment
         const tableBody = document.getElementById("shipmentTable");
         const rows = Array.from(tableBody.querySelectorAll("tr"));
         const searchInput = document.getElementById("searchInput");
@@ -412,9 +410,7 @@
 
         showPage();
 
-        // =====================
-        // HITUNG ONGKIR
-        // =====================
+        // Fungsi untuk menghitung estimasi ongkos kirim (ongkir)
         function hitungOngkir() {
             let originId = $('#origin_location_id').val();
             let destId = $('#destination_location_id').val();
@@ -450,9 +446,7 @@
             hitungOngkir();
         });
 
-        // =====================
-        // SELECT2 LOKASI
-        // =====================
+        // Inisialisasi Select2 untuk pencarian lokasi
         $('#addShipmentModal').on('shown.bs.modal', function() {
             $('.select2-location').select2({
                 dropdownParent: $('#addShipmentModal'),

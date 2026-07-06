@@ -32,7 +32,7 @@ class ScanController extends BaseController
         $outletId   = session()->get('outlet_id');
         $userId     = session()->get('user_id');
 
-        // Ambil info outlet untuk nama lokasi
+        // Ambil informasi detail outlet saat ini untuk dicatat ke lokasi tracking
         $outlet = $this->db->table('outlets o')
             ->select('o.name, l.kelurahan, l.kecamatan, l.kabupaten, l.id as location_id')
             ->join('locations l', 'l.id = o.location_id', 'left')
@@ -44,10 +44,7 @@ class ScanController extends BaseController
 
         switch ($mode) {
 
-            // ========================
-            // SCAN MANIFEST IN
-            // Dipakai saat manifest tiba di hub/outlet
-            // ========================
+            // Proses scan manifest masuk (saat paket tiba di hub/outlet tujuan)
             case 'manifest_in':
                 $manifest = $this->db->table('manifests')
                     ->where('manifest_number', $barcode)
@@ -67,13 +64,13 @@ class ScanController extends BaseController
                     ]);
                 }
 
-                // Update manifest
+                // Update status manifest jadi 'arrived' (tiba)
                 $this->db->table('manifests')->where('id', $manifest['id'])->update([
                     'status'     => 'arrived',
                     'arrived_at' => $now,
                 ]);
 
-                // Ambil semua shipment dalam manifest
+                // Ambil daftar semua pengiriman yang ada di dalam manifest ini
                 $items = $this->db->table('manifest_items')
                     ->where('manifest_id', $manifest['id'])
                     ->get()->getResultArray();
@@ -81,14 +78,14 @@ class ScanController extends BaseController
                 $count = count($items);
 
                 foreach ($items as $item) {
-                    // Update current_status & current_outlet shipment
+                    // Update posisi dan status pengiriman ke lokasi outlet saat ini
                     $this->db->table('shipments')->where('id', $item['shipment_id'])->update([
                         'current_status'    => 'in_transit',
                         'current_outlet_id' => $outletId,
                         'last_scan_at'      => $now,
                     ]);
 
-                    // Insert tracking log
+                    // Tambahkan riwayat pergerakan (tracking log)
                     $this->db->table('shipment_tracking')->insert([
                         'shipment_id'        => $item['shipment_id'],
                         'location_id'        => $locationId,
@@ -106,10 +103,7 @@ class ScanController extends BaseController
                     'mode'    => 'manifest_in',
                 ]);
 
-            // ========================
-            // SCAN MANIFEST OUT
-            // Dipakai saat manifest berangkat dari hub ke outlet tujuan
-            // ========================
+            // Proses scan manifest keluar (saat paket dikirim keluar dari hub/outlet)
             case 'manifest_out':
                 $manifest = $this->db->table('manifests')
                     ->where('manifest_number', $barcode)
@@ -122,7 +116,7 @@ class ScanController extends BaseController
                     ]);
                 }
 
-                // Update manifest berangkat
+                // Update status manifest jadi 'in_transit' (sedang dalam perjalanan)
                 $this->db->table('manifests')->where('id', $manifest['id'])->update([
                     'status'      => 'in_transit',
                     'departed_at' => $now,
@@ -157,10 +151,7 @@ class ScanController extends BaseController
                     'mode'    => 'manifest_out',
                 ]);
 
-            // ========================
-            // SCAN AWB INDIVIDUAL
-            // Dipakai untuk update status per paket
-            // ========================
+            // Proses scan AWB tunggal (untuk update status pengiriman satu per satu)
             case 'awb':
                 $shipment = $this->db->table('shipments')
                     ->where('awb', $barcode)
@@ -183,7 +174,7 @@ class ScanController extends BaseController
                     ]);
                 }
 
-                // Map ke current_status di shipments
+                // Sesuaikan status scan dengan status utama pengiriman di tabel shipments
                 $shipmentStatusMap = [
                     'picked_up'              => 'picked_up',
                     'in_transit'             => 'in_transit',

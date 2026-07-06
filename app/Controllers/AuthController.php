@@ -8,7 +8,7 @@ class AuthController extends BaseController
 {
     public function login()
     {
-        // Kalau sudah login, redirect ke dashboard
+        // Kalau user sudah login, langsung arahkan ke dashboard.
         if (session()->get('logged_in')) {
             return redirect()->to('/dashboard');
         }

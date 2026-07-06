@@ -12,7 +12,6 @@ $statusConfig = [
 ];
 ?>
 
-<!-- Welcome Banner -->
 <div class="card mb-4" style="background:linear-gradient(135deg, var(--primary-navy) 0%, #2d4a6f 100%); border:none;">
     <div class="card-body d-flex align-items-center justify-content-between" style="color:white;">
         <div>
@@ -30,7 +29,6 @@ $statusConfig = [
     </div>
 </div>
 
-<!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-6 col-md-3 mb-3">
         <div class="card h-100">
@@ -80,7 +78,6 @@ $statusConfig = [
     </div>
 </div>
 
-<!-- Status Breakdown -->
 <div class="row mb-4">
     <?php
     $statusIcons = [
@@ -109,7 +106,6 @@ $statusConfig = [
     <?php endforeach; ?>
 </div>
 
-<!-- Grafik -->
 <div class="row mb-4">
     <div class="col-md-7 mb-3">
         <div class="card h-100">
@@ -133,7 +129,6 @@ $statusConfig = [
     </div>
 </div>
 
-<!-- Aksi Cepat -->
 <div class="card mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">Aksi Cepat</h5>
@@ -164,9 +159,7 @@ $statusConfig = [
     </div>
 </div>
 
-<!-- Tabel + Tracking -->
 <div class="row">
-    <!-- Shipment Terbaru -->
     <div class="col-md-7 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -207,7 +200,6 @@ $statusConfig = [
         </div>
     </div>
 
-    <!-- Aktivitas Tracking Terbaru -->
     <div class="col-md-5 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -258,7 +250,7 @@ $(document).ready(function() {
     const statusLabels = <?= json_encode(array_keys($statusCount)) ?>;
     const statusValues = <?= json_encode(array_values($statusCount)) ?>;
 
-    // ---- Chart Shipment per Hari ----
+    // Tampilkan data pengiriman harian dan pendapatannya di grafik batang & garis
     new Chart(document.getElementById('chartShipment'), {
         type: 'bar',
         data: {
@@ -308,7 +300,7 @@ $(document).ready(function() {
         }
     });
 
-    // ---- Chart Donut Status ----
+    // Grafik donat untuk melihat perbandingan status pengiriman secara keseluruhan
     const statusColors = {
         draft:      '#ffc107',
         booked:     '#fd7e14',

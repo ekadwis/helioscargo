@@ -224,9 +224,7 @@
 <script>
 $(document).ready(function() {
 
-    // =====================
-    // TABLE + PAGINATION
-    // =====================
+    // Inisialisasi tabel dan pagination
     const tableBody   = document.getElementById("manifestTable");
     const rows        = Array.from(tableBody.querySelectorAll("tr"));
     const searchInput = document.getElementById("searchInput");
@@ -283,9 +281,7 @@ $(document).ready(function() {
 
     showPage();
 
-    // =====================
-    // LOAD SHIPMENTS BY OUTLET (AJAX)
-    // =====================
+    // Muat data shipment berdasarkan outlet via AJAX
     $('#origin_outlet_id').on('change', function() {
         const outletId = $(this).val();
         const tbody    = $('#shipmentPickBody');
@@ -348,9 +344,7 @@ $(document).ready(function() {
         $('#selectedWeight').text(totalWeight.toFixed(2));
     }
 
-    // =====================
-    // UPDATE STATUS MANIFEST
-    // =====================
+    // Handler untuk memperbarui status manifest
     $(document).on('click', '.btn-update-status', function() {
         const id     = $(this).data('id');
         const status = $(this).data('status');

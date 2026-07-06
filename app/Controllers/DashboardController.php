@@ -22,7 +22,7 @@ class DashboardController extends BaseController
         $customerModel = new CustomerModel();
         $outletModel   = new OutletModel();
 
-        // ---- Summary Cards ----
+        // Hitung data untuk summary cards di dashboard
         $totalShipment  = $shipmentModel->countAll();
         $totalPelanggan = $customerModel->countAll();
         $totalOutlet    = $outletModel->where('is_active', 1)->countAllResults();
@@ -37,14 +37,14 @@ class DashboardController extends BaseController
             ->where('YEAR(created_at)', date('Y'))
             ->get()->getRow()->total_amount ?? 0;
 
-        // ---- Status Breakdown ----
+        // Hitung jumlah pengiriman berdasarkan statusnya
         $statusList = ['draft', 'booked', 'picked_up', 'in_transit', 'delivered', 'cancelled'];
         $statusCount = [];
         foreach ($statusList as $s) {
             $statusCount[$s] = $shipmentModel->where('current_status', $s)->countAllResults();
         }
 
-        // ---- 7 Shipment Terbaru ----
+        // Ambil 7 data pengiriman terbaru untuk ditampilkan di tabel
         $recentShipments = $db->table('shipments s')
             ->select('s.awb, s.item_name, s.current_status, s.total_amount, s.created_at,
                   c.name AS sender_name, l.kabupaten AS tujuan')
@@ -54,7 +54,7 @@ class DashboardController extends BaseController
             ->limit(7)
             ->get()->getResultArray();
 
-        // ---- Tracking Terbaru ----
+        // Ambil 6 aktivitas tracking terbaru
         $recentTracking = $db->table('shipment_tracking st')
             ->select('st.status, st.description, st.created_at, s.awb')
             ->join('shipments s', 's.id = st.shipment_id', 'left')
@@ -62,7 +62,7 @@ class DashboardController extends BaseController
             ->limit(6)
             ->get()->getResultArray();
 
-        // ---- Grafik: shipment per hari 7 hari terakhir ----
+        // Siapkan data untuk grafik jumlah pengiriman 7 hari terakhir
         $chartLabels = [];
         $chartData   = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -73,7 +73,7 @@ class DashboardController extends BaseController
                 ->countAllResults();
         }
 
-        // ---- Grafik: pendapatan per hari 7 hari terakhir ----
+        // Siapkan data untuk grafik total pendapatan 7 hari terakhir
         $revenueData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date          = date('Y-m-d', strtotime("-$i days"));
@@ -100,7 +100,7 @@ class DashboardController extends BaseController
         return view('dashboard/dashboard', $data);
     }
 
-    // Customer Section
+    // Bagian Manajemen Pelanggan
     public function dataPelanggan()
     {
         $customerModel = new CustomerModel();
@@ -164,7 +164,7 @@ class DashboardController extends BaseController
         $db = \Config\Database::connect();
         $db->transBegin();
 
-        // Insert Sender
+        // Simpan data pengirim ke database
         $senderData = [
             'type'        => 'sender',
             'name'        => $this->request->getPost('sender_name'),
@@ -175,7 +175,7 @@ class DashboardController extends BaseController
         ];
         $customerModel->insert($senderData);
 
-        // Insert Receiver
+        // Simpan data penerima ke database
         $receiverData = [
             'type'        => 'receiver',
             'name'        => $this->request->getPost('receiver_name'),
@@ -225,7 +225,7 @@ class DashboardController extends BaseController
     }
 
 
-    // Shipment Section
+    // Bagian Manajemen Pengiriman (Shipment)
     public function shipment()
     {
         $shipmentModel = new ShipmentModel();
@@ -275,9 +275,6 @@ class DashboardController extends BaseController
                 ->with('error', 'Lokasi asal dan tujuan harus dipilih dari daftar yang tersedia.');
         }
 
-        // $lastShipment = $shipmentModel->orderBy('id', 'DESC')->first();
-        // $nextId = $lastShipment ? ((int)$lastShipment['id'] + 1) : 1;
-        // $awb = 'AWB' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
         $awb = null;
 
         $shippingFee  = (float) $this->request->getPost('shipping_fee');
@@ -325,7 +322,7 @@ class DashboardController extends BaseController
         $shipmentModel->insert($data);
         $shipmentId = $shipmentModel->getInsertID();
 
-        // AWB final dibuat dari ID asli hasil insert
+        // Setelah data berhasil disimpan, kita generate AWB berdasarkan ID-nya
         $awb = 'AWB' . str_pad($shipmentId, 6, '0', STR_PAD_LEFT);
         $shipmentModel->update($shipmentId, ['awb' => $awb]);
 
@@ -461,10 +458,10 @@ class DashboardController extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // hapus tracking dulu
+        // Hapus log tracking-nya dulu supaya tidak ada yatim piatu di database
         $trackingLogModel->where('shipment_id', $id)->delete();
 
-        // hapus shipment
+        // Baru kemudian hapus data shipment utama
         $shipmentModel->delete($id);
 
         $db->transComplete();
@@ -476,7 +473,7 @@ class DashboardController extends BaseController
         return redirect()->to('/shipment')->with('success', 'Shipment berhasil dihapus.');
     }
 
-    // Shipment Tracking Section
+    // Bagian Log Pelacakan (Tracking)
     public function shipmentTracking()
     {
         $trackingModel = new ShipmentTrackingModel();
@@ -503,7 +500,7 @@ class DashboardController extends BaseController
             return redirect()->back()->with('error', 'Shipment ID tidak valid.');
         }
 
-        // Map status tracking ke status shipment (enum di tabel shipments)
+        // Kita petakan status tracking ke status shipment yang ada di database
         $statusMap = [
             'picked_up'        => 'picked_up',
             'manifested'       => 'in_transit',
@@ -515,7 +512,7 @@ class DashboardController extends BaseController
             'returned'         => 'cancelled',
         ];
 
-        // Insert ke shipment_tracking
+        // Simpan log tracking baru
         $trackingLogModel->insert([
             'shipment_id'        => $shipment_id,
             'location_id'        => null,
@@ -526,7 +523,7 @@ class DashboardController extends BaseController
         ]);
 
 
-        // Update current_status di shipments
+        // Jangan lupa update status terbaru di tabel shipments juga
         $shipmentStatus = $statusMap[$status] ?? null;
         if ($shipmentStatus) {
             $db->table('shipments')
@@ -557,7 +554,7 @@ class DashboardController extends BaseController
             return $this->response->setJSON(['error' => 'Lokasi tidak valid.']);
         }
 
-        // Tentukan zona (logika sama persis dengan halaman publik / cekTarif)
+        // Tentukan zona pengiriman (logikanya sama dengan fitur cek tarif di halaman publik)
         $zonaJawa = ['DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten'];
 
         if ($origin['kabupaten'] === $dest['kabupaten']) {
@@ -591,7 +588,7 @@ class DashboardController extends BaseController
         ]);
     }
 
-    // Manifest Section
+    // Bagian Manajemen Manifest
 
     public function manifest()
     {
@@ -617,7 +614,7 @@ class DashboardController extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // Generate manifest number: MNF-YYYYMMDD-XXX
+        // Bikin nomor manifest dengan format MNF-YYYYMMDD-XXX
         $today      = date('Ymd');
         $countToday = $manifestModel
             ->where("manifest_number LIKE 'MNF-{$today}-%'")
@@ -631,14 +628,14 @@ class DashboardController extends BaseController
             return redirect()->to('/manifest')->with('error', 'Pilih minimal 1 shipment.');
         }
 
-        // Hitung total berat
+        // Hitung total berat dari semua shipment yang dipilih
         $totalWeight = 0;
         foreach ($shipmentIds as $sid) {
             $s = $shipmentModel->find($sid);
             if ($s) $totalWeight += (float) $s['weight_kg'];
         }
 
-        // Insert manifest
+        // Simpan data manifest utama
         $manifestData = [
             'manifest_number'    => $manifestNumber,
             'origin_outlet_id'   => $originOutletId,
@@ -655,7 +652,7 @@ class DashboardController extends BaseController
         $manifestModel->insert($manifestData);
         $manifestId = $manifestModel->getInsertID();
 
-        // Insert manifest items + update shipment status & manifest_id
+        // Simpan detail item manifest dan sekalian update status pengirimannya
         foreach ($shipmentIds as $sid) {
             $manifestItemModel->insert([
                 'manifest_id'  => $manifestId,
@@ -692,7 +689,7 @@ class DashboardController extends BaseController
 
         if ($status === 'in_transit') {
             $updateData['departed_at'] = $now;
-            // Update semua shipment dalam manifest jadi in_transit
+            // Kalau manifest in_transit, ubah semua shipment di dalamnya jadi in_transit juga
             $items = $manifestItemModel->where('manifest_id', $id)->findAll();
             foreach ($items as $item) {
                 $shipmentModel->update($item['shipment_id'], ['current_status' => 'in_transit']);
@@ -701,7 +698,7 @@ class DashboardController extends BaseController
 
         if ($status === 'arrived') {
             $updateData['arrived_at'] = $now;
-            // Update semua shipment jadi picked_up
+            // Kalau manifest arrived, ubah semua shipment jadi picked_up
             $items = $manifestItemModel->where('manifest_id', $id)->findAll();
             foreach ($items as $item) {
                 $shipmentModel->update($item['shipment_id'], ['current_status' => 'picked_up']);
@@ -726,7 +723,7 @@ class DashboardController extends BaseController
             return redirect()->to('/manifest')->with('error', 'Manifest tidak ditemukan.');
         }
 
-        // Ambil shipments dalam manifest ini
+        // Ambil daftar shipment yang masuk di manifest ini
         $items = $manifestItemModel->where('manifest_id', $id)->findAll();
         $shipments = [];
         foreach ($items as $item) {
@@ -757,7 +754,7 @@ class DashboardController extends BaseController
             ->where('manifest_id', null)
             ->findAll();
 
-        // Tambahkan nama pengirim
+        // Sisipkan nama pengirim ke masing-masing shipment
         foreach ($shipments as &$s) {
             $customer = $customerModel->find($s['sender_customer_id']);
             $s['sender_name'] = $customer['name'] ?? '-';
@@ -766,12 +763,12 @@ class DashboardController extends BaseController
         return $this->response->setJSON($shipments);
     }
 
-    // Laporan Section
+    // Bagian Laporan
     public function laporan()
     {
         $db = \Config\Database::connect();
 
-        // Default range: bulan ini
+        // Kalau nggak ada filter tanggal, default-nya pakai bulan ini
         $startDate = $this->request->getGet('start_date') ?? date('Y-m-01');
         $endDate   = $this->request->getGet('end_date')   ?? date('Y-m-d');
         $status    = $this->request->getGet('status')     ?? '';
@@ -809,7 +806,7 @@ class DashboardController extends BaseController
 
         $shipments = $builder->orderBy('s.created_at', 'DESC')->get()->getResultArray();
 
-        // Summary
+        // Ringkasan data untuk bagian atas laporan
         $totalShipment   = count($shipments);
         $totalPendapatan = array_sum(array_column($shipments, 'total_amount'));
         $totalDelivered  = count(array_filter($shipments, fn($s) => $s['current_status'] === 'delivered'));
@@ -868,14 +865,12 @@ class DashboardController extends BaseController
 
         $shipments = $builder->orderBy('s.created_at', 'DESC')->get()->getResultArray();
 
-        // =====================
-        // PHPSPREADSHEET
-        // =====================
+        // Persiapan bikin file Excel pakai PHPSpreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet       = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Laporan Pengiriman');
 
-        // ---- Styling helpers ----
+        // Styling dasar untuk sel Excel
         $headerFill = [
             'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
             'startColor' => ['rgb' => '1E3A5F'],
@@ -894,7 +889,7 @@ class DashboardController extends BaseController
             ],
         ];
 
-        // ---- Title ----
+        // Judul laporan di baris pertama
         $sheet->mergeCells('A1:M1');
         $sheet->setCellValue('A1', 'LAPORAN PENGIRIMAN — HELIOSCARGO');
         $sheet->getStyle('A1')->applyFromArray([
@@ -902,7 +897,7 @@ class DashboardController extends BaseController
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // ---- Subtitle periode ----
+        // Sub-judul untuk menampilkan periode laporan
         $sheet->mergeCells('A2:M2');
         $sheet->setCellValue('A2', 'Periode: ' . date('d M Y', strtotime($startDate)) . ' s/d ' . date('d M Y', strtotime($endDate)));
         $sheet->getStyle('A2')->applyFromArray([
@@ -910,7 +905,7 @@ class DashboardController extends BaseController
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // ---- Summary row ----
+        // Baris ringkasan singkat (Total shipment, dll.)
         $totalPendapatan = array_sum(array_column($shipments, 'total_amount'));
         $totalDelivered  = count(array_filter($shipments, fn($s) => $s['current_status'] === 'delivered'));
 
@@ -929,7 +924,7 @@ class DashboardController extends BaseController
 
         $sheet->getRowDimension(4)->setRowHeight(5); // spacer
 
-        // ---- Header kolom ----
+        // Header kolom tabel
         $headers = [
             'A' => 'No',
             'B' => 'AWB',
@@ -959,11 +954,11 @@ class DashboardController extends BaseController
         }
         $sheet->getRowDimension(5)->setRowHeight(20);
 
-        // ---- Data rows ----
+        // Isi data ke dalam baris tabel
         $row = 6;
         $no  = 1;
 
-        // Warna status
+        // Mapping warna background berdasarkan status pengiriman
         $statusColors = [
             'delivered'  => 'D4EDDA',
             'in_transit' => 'CCE5FF',
@@ -996,7 +991,7 @@ class DashboardController extends BaseController
             $sheet->setCellValue('L' . $row, strtoupper(str_replace('_', ' ', $s['current_status'])));
             $sheet->setCellValue('M' . $row, date('d-m-Y H:i', strtotime($s['created_at'])));
 
-            // Warna baris berdasarkan status
+            // Terapkan warna ke baris ini sesuai status
             $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
                 'fill' => [
                     'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
@@ -1004,7 +999,7 @@ class DashboardController extends BaseController
                 ],
             ]);
 
-            // Format angka
+            // Format angka untuk kolom berat dan harga
             $sheet->getStyle('I' . $row)->getNumberFormat()->setFormatCode('0.00');
             $sheet->getStyle('J' . $row)->getNumberFormat()->setFormatCode('#,##0');
             $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0');
@@ -1012,7 +1007,7 @@ class DashboardController extends BaseController
             $row++;
         }
 
-        // ---- Total row ----
+        // Baris paling bawah untuk total nilai
         $sheet->setCellValue('J' . $row, array_sum(array_column($shipments, 'shipping_fee')));
         $sheet->setCellValue('K' . $row, $totalPendapatan);
         $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
@@ -1023,18 +1018,18 @@ class DashboardController extends BaseController
         $sheet->getStyle('K' . $row)->getNumberFormat()->setFormatCode('#,##0');
         $sheet->setCellValue('A' . $row, 'TOTAL');
 
-        // ---- Border seluruh tabel ----
+        // Kasih border ke seluruh area tabel
         $sheet->getStyle('A5:M' . $row)->applyFromArray($borderAll);
 
-        // ---- Auto width kolom ----
+        // Sesuaikan lebar kolom otomatis supaya rapi
         foreach (range('A', 'M') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // ---- Freeze header ----
+        // Freeze panel header supaya nggak hilang waktu di-scroll
         $sheet->freezePane('A6');
 
-        // ---- Output ----
+        // Header HTTP supaya browser mengenali ini sebagai file Excel yang bisa di-download
         $filename = 'Laporan_Pengiriman_' . $startDate . '_sd_' . $endDate . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -1046,19 +1041,19 @@ class DashboardController extends BaseController
         exit;
     }
 
-    // Resi Section
+    // Bagian Cetak Resi
     public function invoice()
     {
         return view('dashboard/invoice');
     }
 
-    // Users Section
+    // Bagian Manajemen Pengguna
     public function users()
     {
         return view('dashboard/users');
     }
 
-    // Settings Section
+    // Bagian Pengaturan Aplikasi
     public function settings()
     {
         $settingModel = new \App\Models\SettingModel();
@@ -1103,13 +1098,13 @@ class DashboardController extends BaseController
 
         $userModel->update($userId, $data);
 
-        // Update session full_name
+        // Update nama di session juga, biar langsung berubah di tampilan
         session()->set('full_name', $fullName);
 
         return redirect()->to('/settings')->with('success', 'Profil berhasil diupdate.');
     }
 
-    // Resi Section
+    // Bagian Cetak Resi (PDF)
     public function cetakResi($id)
     {
         $db = \Config\Database::connect();
@@ -1142,15 +1137,15 @@ class DashboardController extends BaseController
             return redirect()->to('/shipment')->with('error', 'Shipment tidak ditemukan.');
         }
 
-        // Generate barcode AWB
+        // Bikin barcode dari nomor AWB
         $barcodeGenerator = new \Picqer\Barcode\BarcodeGeneratorHTML();
         $barcode = $barcodeGenerator->getBarcode($shipment['awb'], $barcodeGenerator::TYPE_CODE_128, 2, 60);
 
-        // Generate QR code URL tracking
+        // Bikin QR Code yang mengarah ke halaman tracking
         $trackingUrl = base_url('tracking/' . $shipment['awb']);
         $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($trackingUrl);
 
-        // Generate PDF pakai DomPDF
+        // Persiapan bikin PDF pakai library DomPDF
         $dompdf = new \Dompdf\Dompdf();
         $dompdf->getOptions()->setChroot(FCPATH);
         $dompdf->getOptions()->setIsRemoteEnabled(true);

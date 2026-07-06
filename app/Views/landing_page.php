@@ -44,7 +44,6 @@
 
 <body>
 
-    <!-- ================= NAVBAR ================= -->
     <nav class="navbar navbar-expand-lg bg-white shadow-sm sticky-top">
         <div class="container">
 
@@ -71,7 +70,6 @@
         </div>
     </nav>
 
-    <!-- ================= HERO ================= -->
     <section class="bg-navy text-white section">
         <div class="container">
             <div class="row align-items-center">
@@ -99,7 +97,6 @@
         </div>
     </section>
 
-    <!-- ================= TRACKING ================= -->
     <section class="section bg-light">
         <div class="container text-center">
 
@@ -126,7 +123,6 @@
         </div>
     </section>
 
-    <!-- ================= CEK TARIF ================= -->
     <section class="section">
         <div class="container">
 
@@ -184,7 +180,6 @@
         </div>
     </section>
 
-    <!-- ================= LAYANAN ================= -->
     <section class="section bg-light">
         <div class="container">
 
@@ -224,7 +219,6 @@
         </div>
     </section>
 
-    <!-- ================= PROMO ================= -->
     <section class="section">
         <div class="container">
 
@@ -275,7 +269,6 @@
 
         </div>
     </section>
-    <!-- ================= BERITA ================= -->
     <section class="section bg-light">
         <div class="container">
 
@@ -326,7 +319,6 @@
 
         </div>
     </section>
-    <!-- ================= CONTACT ================= -->
     <section class="section">
         <div class="container">
 
@@ -386,7 +378,6 @@
         </div>
     </section>
 
-    <!-- ================= FOOTER ================= -->
     <footer class="bg-dark text-white pt-5 pb-3">
         <div class="container">
 

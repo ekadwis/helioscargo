@@ -31,7 +31,7 @@ class HomeController extends BaseController
 
         $db = \Config\Database::connect();
 
-        // Cari shipment
+        // Cari data shipment berdasarkan nomor resi (AWB) yang diinput
         $shipment = $db->table('shipments s')
             ->select('
                 s.id, s.awb, s.item_name, s.qty, s.weight_kg,
@@ -63,7 +63,7 @@ class HomeController extends BaseController
             return redirect()->to('/')->with('track_error', 'Nomor resi <strong>' . esc($awb) . '</strong> tidak ditemukan.');
         }
 
-        // Ambil semua history tracking
+        // Ambil riwayat pelacakan lengkap untuk shipment ini
         $trackings = $db->table('shipment_tracking st')
             ->select('st.status, st.description, st.created_at, l.kelurahan, l.kecamatan, l.kabupaten')
             ->join('locations l', 'l.id = st.location_id', 'left')
@@ -91,7 +91,7 @@ class HomeController extends BaseController
             return $this->response->setJSON(['error' => 'Semua field wajib diisi.']);
         }
 
-        // Ambil provinsi asal & tujuan
+        // Ambil data lokasi asal dan tujuan pengiriman
         $origin = $db->table('locations')->where('id', $originId)->get()->getRowArray();
         $dest   = $db->table('locations')->where('id', $destId)->get()->getRowArray();
 
@@ -99,7 +99,7 @@ class HomeController extends BaseController
             return $this->response->setJSON(['error' => 'Lokasi tidak valid.']);
         }
 
-        // Tentukan zona
+        // Tentukan zona pengiriman berdasarkan lokasi asal dan tujuan
         $zonaJawa = ['DKI Jakarta', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten'];
 
         $originProv = $origin['provinsi'];
@@ -117,7 +117,7 @@ class HomeController extends BaseController
             $zona = 'luar_jawa';
         }
 
-        // Ambil tarif
+        // Ambil tarif yang sesuai dari database
         $tarif = $db->table('tarif')
             ->where('zona', $zona)
             ->where('service_id', $serviceId)
@@ -131,7 +131,7 @@ class HomeController extends BaseController
         $hargaPerKg   = (float) $tarif['harga_per_kg'];
         $total        = $hargaPerKg * $beratAktual;
 
-        // Ambil info service
+        // Ambil info detail layanan yang dipilih
         $service = $db->table('services')->where('id', $serviceId)->get()->getRowArray();
 
         return $this->response->setJSON([

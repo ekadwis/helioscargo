@@ -179,7 +179,6 @@
         $cfg = $statusConfig[$cs] ?? ['label' => $cs, 'color' => '#94a3b8', 'bg' => 'rgba(148,163,184,0.2)'];
         ?>
 
-        <!-- Status Banner -->
         <div class="status-banner">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                 <div>
@@ -202,7 +201,6 @@
             </div>
         </div>
 
-        <!-- Info Paket -->
         <div class="info-card">
             <div class="row g-3">
                 <div class="col-6 col-md-3">
@@ -238,7 +236,6 @@
             </div>
         </div>
 
-        <!-- Timeline Tracking -->
         <div class="info-card">
             <h5 class="fw-bold mb-4" style="color:var(--navy);">
                 <i class="bi bi-clock-history me-2"></i>History Tracking

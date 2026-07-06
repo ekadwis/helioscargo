@@ -11,9 +11,7 @@ class ContentController extends BaseController
         $this->db = \Config\Database::connect();
     }
 
-    // ========================
-    // PROMO
-    // ========================
+    // Manajemen Promo
     public function promoIndex()
     {
         $data = [
@@ -58,9 +56,7 @@ class ContentController extends BaseController
         return redirect()->to('/promo')->with('success', 'Promo berhasil dihapus.');
     }
 
-    // ========================
-    // NEWS
-    // ========================
+    // Manajemen Berita (News)
     public function newsIndex()
     {
         $data = [
@@ -73,7 +69,7 @@ class ContentController extends BaseController
 
     public function newsStore()
     {
-        // --- VALIDASI UPLOAD: hanya gambar, maks 2MB ---
+        // Pastikan file yang diupload berupa gambar dengan ukuran maksimal 2MB.
         if (! $this->validate([
             'title' => 'required|min_length[3]',
             'image' => 'permit_empty|is_image[image]|max_size[image,2048]|ext_in[image,jpg,jpeg,png,webp]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]',
@@ -93,7 +89,7 @@ class ContentController extends BaseController
         $title = $this->request->getPost('title');
         $slug  = url_title($title, '-', true);
 
-        // Pastikan slug unik
+        // Tambahkan timestamp kalau slug-nya sudah ada, biar unik.
         $count = $this->db->table('news')->where('slug', $slug)->countAllResults();
         if ($count > 0) {
             $slug = $slug . '-' . time();
@@ -114,7 +110,7 @@ class ContentController extends BaseController
 
     public function newsUpdate($id)
     {
-        // --- VALIDASI UPLOAD: gambar opsional, tapi kalau ada harus valid ---
+        // Validasi lagi untuk update: upload gambar opsional, tapi tetap harus format yang benar.
         if (! $this->validate([
             'title' => 'required|min_length[3]',
             'image' => 'permit_empty|is_image[image]|max_size[image,2048]|ext_in[image,jpg,jpeg,png,webp]|mime_in[image,image/jpg,image/jpeg,image/png,image/webp]',
