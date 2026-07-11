@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\OutletModel;
 use App\Models\LocationModel;
+use CodeIgniter\Database\Exceptions\DatabaseException;
 
 class OutletController extends BaseController
 {
@@ -78,8 +79,14 @@ class OutletController extends BaseController
     public function delete($id)
     {
         $outletModel = new OutletModel();
-        $outletModel->delete($id);
 
-        return redirect()->to('/outlet')->with('success', 'Outlet berhasil dihapus.');
+        try {
+            $outletModel->delete($id);
+            return redirect()->to('/outlet')->with('success', 'Outlet berhasil dihapus.');
+        } catch (DatabaseException $e) {
+            // Outlet ini masih dipakai di manifest atau shipment, jadi tidak bisa dihapus langsung.
+            // Kasih tahu user supaya mereka tahu kenapa gagal.
+            return redirect()->to('/outlet')->with('error', 'Outlet tidak bisa dihapus karena masih digunakan oleh data manifest atau shipment yang ada. Hapus atau pindahkan data tersebut terlebih dahulu.');
+        }
     }
 }
