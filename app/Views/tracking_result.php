@@ -16,6 +16,9 @@
         :root {
             --navy: #1e3a5f;
             --orange: #f97316;
+            --green: #16a34a;
+            --green-soft: #d1fae5;
+            --gray-line: #d9dee5;
         }
 
         body {
@@ -74,81 +77,189 @@
             color: #1e293b;
         }
 
-        /* Timeline */
-        .timeline {
+        /* ===== Progress Steps (ala Shopee) ===== */
+        .progress-caption {
+            font-weight: 700;
+            color: var(--green);
+            font-size: 1.05rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .progress-caption.is-cancelled {
+            color: #ef4444;
+        }
+
+        .step-track {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             position: relative;
-            padding-left: 2rem;
+            padding: 0 6px;
         }
 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 10px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-        }
-
-        .timeline-item {
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
             position: relative;
-            margin-bottom: 1.5rem;
+            z-index: 2;
         }
 
-        .timeline-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: -2rem;
-            top: 4px;
-            width: 20px;
-            height: 20px;
+        .step-circle {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background: var(--navy);
-            border: 3px solid #fff;
-            box-shadow: 0 0 0 2px var(--navy);
+            background: #fff;
+            border: 3px solid var(--gray-line);
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .timeline-item:first-child .timeline-dot {
-            background: var(--orange);
-            box-shadow: 0 0 0 2px var(--orange);
-        }
-
-        .timeline-date {
-            font-size: 0.78rem;
+            font-size: 0.85rem;
             color: #94a3b8;
-            margin-bottom: 2px;
+            transition: all .2s;
         }
 
-        .timeline-status {
-            font-weight: 700;
-            color: var(--navy);
+        .step-line {
+            position: absolute;
+            top: 15px;
+            left: calc(50% + 18px);
+            right: calc(-50% + 18px);
+            height: 3px;
+            background: var(--gray-line);
+            z-index: 1;
+        }
+
+        .step:last-child .step-line {
+            display: none;
+        }
+
+        .step.done .step-circle {
+            background: var(--green);
+            border-color: var(--green);
+            color: #fff;
+        }
+
+        .step.done .step-line {
+            background: var(--green);
+        }
+
+        .step.active .step-circle {
+            background: var(--green);
+            border-color: var(--green);
+            box-shadow: 0 0 0 4px var(--green-soft);
+            color: #fff;
+        }
+
+        .step-label {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .step.done .step-label,
+        .step.active .step-label {
+            color: var(--green);
+        }
+
+        /* ===== Timeline (ala Shopee) ===== */
+        .timeline {
+            position: relative;
+        }
+
+        .timeline-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .timeline-col-date {
+            width: 62px;
+            flex-shrink: 0;
+            text-align: right;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            padding-top: 1px;
+        }
+
+        .timeline-row:first-child .timeline-col-date {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .timeline-col-line {
+            width: 16px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .timeline-row:first-child .timeline-dot {
+            background: var(--green);
+            width: 14px;
+            height: 14px;
+        }
+
+        .timeline-connector {
+            width: 2px;
+            flex: 1;
+            background: #e2e8f0;
+            margin-top: 2px;
+        }
+
+        .timeline-row:last-child .timeline-connector {
+            display: none;
+        }
+
+        .timeline-col-content {
+            padding-bottom: 1.75rem;
+            flex: 1;
         }
 
         .timeline-desc {
-            font-size: 0.85rem;
-            color: #64748b;
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .timeline-row:first-child .timeline-desc {
+            color: var(--green);
+            font-weight: 600;
         }
 
         .timeline-loc {
             font-size: 0.78rem;
-            color: #94a3b8;
+            color: #cbd5e1;
+            margin-top: 2px;
         }
 
-        .timeline-card {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 1rem 1.2rem;
+        .timeline-row:first-child .timeline-loc {
+            color: #64748b;
+            font-weight: 500;
         }
 
-        .timeline-item:first-child .timeline-card {
-            background: #fff8f0;
-            border: 1px solid #fed7aa;
+        .timeline-proof-link {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .timeline-proof-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -177,6 +288,22 @@
         ];
         $cs  = $shipment['current_status'];
         $cfg = $statusConfig[$cs] ?? ['label' => $cs, 'color' => '#94a3b8', 'bg' => 'rgba(148,163,184,0.2)'];
+
+        // ==== Mapping status ke 3 step progress (ala Shopee) ====
+        // Step 1: Sedang Dikirim  -> draft, booked, picked_up
+        // Step 2: Menuju Alamatmu -> in_transit
+        // Step 3: Pesanan Tiba    -> delivered
+        $stepOrder = ['draft' => 1, 'booked' => 1, 'picked_up' => 1, 'in_transit' => 2, 'delivered' => 3];
+        $currentStep = $stepOrder[$cs] ?? 1;
+        $isCancelled = ($cs === 'cancelled');
+
+        function stepClass($stepNumber, $currentStep, $isCancelled)
+        {
+            if ($isCancelled) return '';
+            if ($stepNumber < $currentStep) return 'done';
+            if ($stepNumber === $currentStep) return 'active';
+            return '';
+        }
         ?>
 
         <div class="status-banner">
@@ -197,6 +324,54 @@
                         <div style="font-size:0.8rem;opacity:0.7;margin-top:4px;">Est. Tiba</div>
                         <div style="font-weight:600;"><?= date('d M Y', strtotime($shipment['estimated_delivery_date'])) ?></div>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Progress 3 Step ala Shopee ===== -->
+        <div class="info-card">
+            <?php if ($isCancelled) : ?>
+                <div class="progress-caption is-cancelled">
+                    <i class="bi bi-x-circle-fill me-1"></i> Pesanan dibatalkan
+                </div>
+            <?php else : ?>
+                <div class="progress-caption">
+                    <?php if ($currentStep === 3 && !empty($trackings)) : ?>
+                        Pesanan tiba pada <?= date('d M', strtotime($trackings[count($trackings) - 1]['created_at'])) ?>
+                    <?php elseif ($currentStep === 2) : ?>
+                        Pesanan sedang menuju alamatmu
+                    <?php else : ?>
+                        Pesanan sedang dikirim
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="step-track">
+                <div class="step <?= stepClass(1, $currentStep, $isCancelled) ?>">
+                    <div class="step-circle">
+                        <?php if (stepClass(1, $currentStep, $isCancelled) === 'done') : ?>
+                            <i class="bi bi-check-lg"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step-label">Sedang Dikirim</div>
+                </div>
+                <div class="step <?= stepClass(2, $currentStep, $isCancelled) ?>">
+                    <div class="step-circle">
+                        <?php if (stepClass(2, $currentStep, $isCancelled) === 'done') : ?>
+                            <i class="bi bi-check-lg"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step-label">Menuju Alamatmu</div>
+                </div>
+                <div class="step <?= stepClass(3, $currentStep, $isCancelled) ?>">
+                    <div class="step-circle">
+                        <?php if (stepClass(3, $currentStep, $isCancelled) === 'done' || stepClass(3, $currentStep, $isCancelled) === 'active') : ?>
+                            <i class="bi bi-check-lg"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="step-label">Pesanan Tiba</div>
                 </div>
             </div>
         </div>
@@ -236,6 +411,7 @@
             </div>
         </div>
 
+        <!-- ===== Timeline ala Shopee (terbaru di atas, hijau; lama pudar abu-abu) ===== -->
         <div class="info-card">
             <h5 class="fw-bold mb-4" style="color:var(--navy);">
                 <i class="bi bi-clock-history me-2"></i>History Tracking
@@ -243,20 +419,27 @@
 
             <?php if (!empty($trackings)) : ?>
                 <div class="timeline">
-                    <?php foreach (array_reverse($trackings) as $t) : ?>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-card">
-                                <div class="timeline-date">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    <?= date('d M Y, H:i', strtotime($t['created_at'])) ?> WIB
-                                </div>
-                                <div class="timeline-status">
+                    <?php
+                    // Urutkan terbaru paling atas
+                    $sorted = array_reverse($trackings);
+                    foreach ($sorted as $t) :
+                    ?>
+                        <div class="timeline-row">
+                            <div class="timeline-col-date">
+                                <?= date('d M', strtotime($t['created_at'])) ?><br>
+                                <?= date('H:i', strtotime($t['created_at'])) ?>
+                            </div>
+                            <div class="timeline-col-line">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-connector"></div>
+                            </div>
+                            <div class="timeline-col-content">
+                                <div class="timeline-desc">
                                     <?= ucwords(str_replace('_', ' ', $t['status'])) ?>
+                                    <?php if ($t['description']) : ?>
+                                        . <?= esc($t['description']) ?>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if ($t['description']) : ?>
-                                    <div class="timeline-desc"><?= esc($t['description']) ?></div>
-                                <?php endif; ?>
                                 <?php if ($t['kelurahan']) : ?>
                                     <div class="timeline-loc">
                                         <i class="bi bi-geo-alt me-1"></i>
