@@ -148,26 +148,106 @@
 
         <!-- Tracking Timeline -->
         <div class="col-md-4">
+            <style>
+                .sc-timeline {
+                    position: relative;
+                }
+
+                .sc-timeline-row {
+                    display: flex;
+                    gap: 0.75rem;
+                }
+
+                .sc-timeline-col-line {
+                    width: 14px;
+                    flex-shrink: 0;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .sc-timeline-dot {
+                    width: 11px;
+                    height: 11px;
+                    border-radius: 50%;
+                    background: #cbd5e1;
+                    margin-top: 4px;
+                    flex-shrink: 0;
+                }
+
+                .sc-timeline-row:first-child .sc-timeline-dot {
+                    background: #16a34a;
+                    width: 13px;
+                    height: 13px;
+                }
+
+                .sc-timeline-connector {
+                    width: 2px;
+                    flex: 1;
+                    background: #e2e8f0;
+                    margin-top: 2px;
+                }
+
+                .sc-timeline-row:last-child .sc-timeline-connector {
+                    display: none;
+                }
+
+                .sc-timeline-col-content {
+                    padding-bottom: 1.4rem;
+                    flex: 1;
+                }
+
+                .sc-timeline-status {
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    color: #cbd5e1;
+                    margin-bottom: 1px;
+                }
+
+                .sc-timeline-desc {
+                    font-size: 0.8rem;
+                    color: #cbd5e1;
+                    margin-bottom: 1px;
+                }
+
+                .sc-timeline-date {
+                    font-size: 0.75rem;
+                    color: #cbd5e1;
+                }
+
+                .sc-timeline-row:first-child .sc-timeline-status {
+                    color: #16a34a;
+                }
+
+                .sc-timeline-row:first-child .sc-timeline-desc {
+                    color: #64748b;
+                }
+
+                .sc-timeline-row:first-child .sc-timeline-date {
+                    color: #94a3b8;
+                }
+            </style>
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Tracking History</h5>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($trackings)) : ?>
-                        <ul class="list-unstyled">
+                        <div class="sc-timeline">
                             <?php foreach (array_reverse($trackings) as $track) : ?>
-                                <li class="d-flex gap-3 mb-3">
-                                    <div class="flex-shrink-0 mt-1">
-                                        <span class="badge bg-primary rounded-circle p-2">●</span>
+                                <div class="sc-timeline-row">
+                                    <div class="sc-timeline-col-line">
+                                        <div class="sc-timeline-dot"></div>
+                                        <div class="sc-timeline-connector"></div>
                                     </div>
-                                    <div>
-                                        <p class="mb-0"><strong><?= str_replace('_', ' ', $track['status']) ?></strong></p>
-                                        <p class="mb-0 text-muted small"><?= $track['description'] ?></p>
-                                        <p class="mb-0 text-muted small"><?= date('d-m-Y H:i', strtotime($track['created_at'])) ?></p>
+                                    <div class="sc-timeline-col-content">
+                                        <p class="sc-timeline-status mb-0"><?= str_replace('_', ' ', $track['status']) ?></p>
+                                        <p class="sc-timeline-desc mb-0"><?= $track['description'] ?></p>
+                                        <p class="sc-timeline-date mb-0"><?= date('d-m-Y H:i', strtotime($track['created_at'])) ?></p>
                                     </div>
-                                </li>
+                                </div>
                             <?php endforeach; ?>
-                        </ul>
+                        </div>
                     <?php else : ?>
                         <p class="text-muted text-center">Belum ada tracking.</p>
                     <?php endif; ?>
