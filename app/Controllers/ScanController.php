@@ -32,12 +32,26 @@ class ScanController extends BaseController
         $outletId   = session()->get('outlet_id');
         $userId     = session()->get('user_id');
 
+        if (empty($outletId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Outlet belum diset untuk akun ini. Hubungi admin untuk assign outlet.',
+            ]);
+        }
+
         // Ambil informasi detail outlet saat ini untuk dicatat ke lokasi tracking
         $outlet = $this->db->table('outlets o')
             ->select('o.name, l.kelurahan, l.kecamatan, l.kabupaten, l.id as location_id')
             ->join('locations l', 'l.id = o.location_id', 'left')
             ->where('o.id', $outletId)
             ->get()->getRowArray();
+
+        if (!$outlet) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data outlet tidak ditemukan di database.',
+            ]);
+        }
 
         $locationId  = $outlet['location_id'] ?? null;
         $outletName  = $outlet['name'] ?? 'Unknown';
@@ -116,6 +130,13 @@ class ScanController extends BaseController
                     ]);
                 }
 
+                if ($manifest['status'] === 'in_transit') {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => "Manifest <strong>{$barcode}</strong> sudah pernah di-scan keluar.",
+                    ]);
+                }
+
                 // Update status manifest jadi 'in_transit' (sedang dalam perjalanan)
                 $this->db->table('manifests')->where('id', $manifest['id'])->update([
                     'status'      => 'in_transit',
@@ -179,8 +200,8 @@ class ScanController extends BaseController
                     'picked_up'              => 'picked_up',
                     'in_transit'             => 'in_transit',
                     'arrived_at_hub'         => 'in_transit',
-                    'arrived_at_destination' => 'picked_up',
-                    'out_for_delivery'       => 'picked_up',
+                    'arrived_at_destination' => 'in_transit',
+                    'out_for_delivery'       => 'in_transit',
                     'delivered'              => 'delivered',
                     'failed_delivery'        => 'in_transit',
                     'returned'               => 'cancelled',

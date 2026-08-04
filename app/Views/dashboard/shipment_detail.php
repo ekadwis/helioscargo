@@ -89,16 +89,18 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
     }
 
     .sd-info-label {
-        font-size: 0.78rem;
-        color: #94a3b8;
+        font-size: 0.85rem;
+        color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
+        font-weight: 600;
     }
 
     .sd-info-value {
-        font-weight: 600;
-        color: #1e293b;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1.05rem;
     }
 
     /* Progress Steps */
@@ -177,9 +179,9 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
 
     .sd-step-label {
         margin-top: 8px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #94a3b8;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #64748b;
         text-align: center;
     }
 
@@ -195,17 +197,18 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
     }
 
     .sd-timeline-col-date {
-        width: 62px;
+        width: 68px;
         flex-shrink: 0;
         text-align: right;
-        font-size: 0.78rem;
-        color: #cbd5e1;
+        font-size: 0.85rem;
+        color: #94a3b8;
         padding-top: 1px;
+        font-weight: 500;
     }
 
     .sd-timeline-row:first-child .sd-timeline-col-date {
-        color: #1e293b;
-        font-weight: 600;
+        color: #0f172a;
+        font-weight: 700;
     }
 
     .sd-timeline-col-line {
@@ -248,25 +251,28 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
     }
 
     .sd-timeline-desc {
-        font-size: 0.92rem;
-        color: #cbd5e1;
+        font-size: 1rem;
+        color: #475569;
         line-height: 1.5;
+        font-weight: 500;
     }
 
     .sd-timeline-row:first-child .sd-timeline-desc {
         color: var(--green);
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 1.05rem;
     }
 
     .sd-timeline-loc {
-        font-size: 0.78rem;
-        color: #cbd5e1;
-        margin-top: 2px;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 3px;
+        font-weight: 500;
     }
 
     .sd-timeline-row:first-child .sd-timeline-loc {
-        color: #64748b;
-        font-weight: 500;
+        color: #334155;
+        font-weight: 600;
     }
 </style>
 
@@ -316,7 +322,7 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
                     <i class="bi bi-x-circle-fill me-1"></i> Pesanan dibatalkan
                 </div>
             <?php else : ?>
-                <div class="sd-progress-caption">
+                <div class="sd-progress-caption fs-2">
                     <?php if ($currentStep === 3) : ?>
                         Pesanan telah tiba
                     <?php elseif ($currentStep === 2) : ?>
@@ -379,14 +385,14 @@ function stepClass($stepNumber, $currentStep, $isCancelled)
                 <div class="col-md-6">
                     <div class="sd-info-label">Pengirim</div>
                     <div class="sd-info-value"><?= $findById($customers, $shipment['sender_customer_id'], 'name') ?></div>
-                    <div style="font-size:0.82rem;color:#64748b;">
+                    <div style="font-size:0.9rem;color:#475569;font-weight:500;">
                         Kel. <?= $findById($locations, $shipment['origin_location_id'], 'kelurahan') ?>, <?= $findById($locations, $shipment['origin_location_id'], 'kecamatan') ?>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sd-info-label">Penerima</div>
                     <div class="sd-info-value"><?= $findById($customers, $shipment['receiver_customer_id'], 'name') ?></div>
-                    <div style="font-size:0.82rem;color:#64748b;">
+                    <div style="font-size:0.9rem;color:#475569;font-weight:500;">
                         Kel. <?= $findById($locations, $shipment['destination_location_id'], 'kelurahan') ?>, <?= $findById($locations, $shipment['destination_location_id'], 'kecamatan') ?>
                     </div>
                 </div>

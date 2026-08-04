@@ -79,6 +79,17 @@
                                     <td>
                                         <a href="/manifest/detail/<?= $m['id'] ?>" class="btn btn-sm btn-info">Detail</a>
 
+                                        <!-- Tampilkan QR -->
+                                        <button type="button" class="btn btn-sm btn-dark btn-show-qr"
+                                            data-number="<?= $m['manifest_number'] ?>"
+                                            data-origin="<?= htmlspecialchars($originName) ?>"
+                                            data-dest="<?= htmlspecialchars($destName) ?>"
+                                            data-driver="<?= htmlspecialchars($m['driver_name'] ?? '-') ?>"
+                                            data-vehicle="<?= htmlspecialchars($m['vehicle_number'] ?? '-') ?>"
+                                            data-total="<?= $m['total_shipments'] ?>">
+                                            <i class="bi bi-qr-code"></i> QR
+                                        </button>
+
                                         <!-- Update Status -->
                                         <button type="button" class="btn btn-sm btn-warning btn-update-status"
                                             data-id="<?= $m['id'] ?>"
@@ -190,6 +201,38 @@
     </div>
 </div>
 
+<!-- MODAL QR CODE MANIFEST -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:360px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">QR Code Manifest</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <h6 class="text-primary fw-bold mb-1" id="qrModalNumber"></h6>
+                <div id="qrModalCanvas" class="d-inline-block p-3 bg-white rounded border my-3"></div>
+                <div class="text-muted small mb-1">
+                    <i class="bi bi-geo-alt me-1"></i><span id="qrModalRoute"></span>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-person-badge me-1"></i><span id="qrModalDriver"></span>
+                    &nbsp;|&nbsp;
+                    <i class="bi bi-truck me-1"></i><span id="qrModalVehicle"></span>
+                    &nbsp;|&nbsp;
+                    <i class="bi bi-box-seam me-1"></i><span id="qrModalTotal"></span> paket
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="btnPrintQR">
+                    <i class="bi bi-printer me-1"></i>Print QR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL UPDATE STATUS -->
 <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -221,6 +264,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 $(document).ready(function() {
 
@@ -343,6 +387,61 @@ $(document).ready(function() {
         $('#selectedCount').text(checked.length);
         $('#selectedWeight').text(totalWeight.toFixed(2));
     }
+
+    // Handler untuk tampilkan QR manifest
+    let qrInstance = null;
+    $(document).on('click', '.btn-show-qr', function() {
+        const number  = $(this).data('number');
+        const origin  = $(this).data('origin');
+        const dest    = $(this).data('dest');
+        const driver  = $(this).data('driver');
+        const vehicle = $(this).data('vehicle');
+        const total   = $(this).data('total');
+
+        $('#qrModalNumber').text(number);
+        $('#qrModalRoute').text(origin + ' → ' + dest);
+        $('#qrModalDriver').text(driver);
+        $('#qrModalVehicle').text(vehicle);
+        $('#qrModalTotal').text(total);
+
+        // Reset canvas
+        const canvas = document.getElementById('qrModalCanvas');
+        canvas.innerHTML = '';
+
+        if (qrInstance) { qrInstance.clear(); }
+        qrInstance = new QRCode(canvas, {
+            text: number,
+            width: 220,
+            height: 220,
+            colorDark: "#1e3a5f",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        $('#btnPrintQR').off('click').on('click', function() {
+            const img = canvas.querySelector('img');
+            if (!img) { alert('QR belum siap, tunggu sebentar.'); return; }
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html>
+                <head><title>QR - ${number}</title></head>
+                <body style="text-align:center;font-family:Arial,sans-serif;padding:40px;">
+                    <h2 style="margin-bottom:5px;">MANIFEST</h2>
+                    <h1 style="margin:0;color:#1e3a5f;">${number}</h1>
+                    <div style="margin:20px auto;"><img src="${img.src}" style="width:220px;height:220px;"></div>
+                    <p style="color:#666;">Scan QR ini di Scan Center untuk proses manifest</p>
+                    <hr>
+                    <small>${origin} &rarr; ${dest}</small><br>
+                    <small>Driver: ${driver} | Kendaraan: ${vehicle} | ${total} paket</small>
+                </body>
+                </html>
+            `);
+            win.document.close();
+            win.onload = function() { win.print(); };
+        });
+
+        $('#qrModal').modal('show');
+    });
 
     // Handler untuk memperbarui status manifest
     $(document).on('click', '.btn-update-status', function() {

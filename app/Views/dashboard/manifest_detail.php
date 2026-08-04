@@ -30,29 +30,42 @@
 
         <div class="card-body">
             <div class="row mb-4">
-                <div class="col-md-3">
-                    <small class="text-muted">Outlet Asal</small>
-                    <p class="mb-0"><strong><?= $findById($outlets, $manifest['origin_outlet_id'], 'name') ?></strong></p>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Outlet Asal</small>
+                            <p class="mb-0"><strong><?= $findById($outlets, $manifest['origin_outlet_id'], 'name') ?></strong></p>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Hub Tujuan</small>
+                            <p class="mb-0"><strong><?= $findById($outlets, $manifest['destination_hub_id'], 'name') ?></strong></p>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Driver</small>
+                            <p class="mb-0"><strong><?= $manifest['driver_name'] ?? '-' ?></strong></p>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Kendaraan</small>
+                            <p class="mb-0"><strong><?= $manifest['vehicle_number'] ?? '-' ?></strong></p>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Total Paket</small>
+                            <p class="mb-0"><strong><?= $manifest['total_shipments'] ?></strong></p>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted">Total Berat</small>
+                            <p class="mb-0"><strong><?= number_format((float)$manifest['total_weight'], 2) ?> kg</strong></p>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <small class="text-muted">Hub Tujuan</small>
-                    <p class="mb-0"><strong><?= $findById($outlets, $manifest['destination_hub_id'], 'name') ?></strong></p>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted">Driver</small>
-                    <p class="mb-0"><strong><?= $manifest['driver_name'] ?? '-' ?></strong></p>
-                </div>
-                <div class="col-md-2">
-                    <small class="text-muted">Kendaraan</small>
-                    <p class="mb-0"><strong><?= $manifest['vehicle_number'] ?? '-' ?></strong></p>
-                </div>
-                <div class="col-md-1">
-                    <small class="text-muted">Total Paket</small>
-                    <p class="mb-0"><strong><?= $manifest['total_shipments'] ?></strong></p>
-                </div>
-                <div class="col-md-1">
-                    <small class="text-muted">Total Berat</small>
-                    <p class="mb-0"><strong><?= number_format((float)$manifest['total_weight'], 2) ?> kg</strong></p>
+                <div class="col-md-3 text-center">
+                    <div id="qrManifest" class="d-inline-block p-2 bg-white rounded border"></div>
+                    <div class="mt-1">
+                        <small class="text-muted d-block"><?= $manifest['manifest_number'] ?></small>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" onclick="printQR()">
+                            <i class="bi bi-printer me-1"></i>Print QR
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -124,4 +137,43 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+$(document).ready(function() {
+    new QRCode(document.getElementById("qrManifest"), {
+        text: "<?= $manifest['manifest_number'] ?>",
+        width: 150,
+        height: 150,
+        colorDark: "#1e3a5f",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+});
+
+function printQR() {
+    const qrImg = document.querySelector('#qrManifest img');
+    if (!qrImg) { alert('QR belum siap'); return; }
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <html>
+        <head><title>QR - <?= $manifest['manifest_number'] ?></title></head>
+        <body style="text-align:center;font-family:Arial,sans-serif;padding:40px;">
+            <h2 style="margin-bottom:5px;">MANIFEST</h2>
+            <h1 style="margin:0;color:#1e3a5f;"><?= $manifest['manifest_number'] ?></h1>
+            <div style="margin:20px auto;"><img src="${qrImg.src}" style="width:200px;height:200px;"></div>
+            <p style="color:#666;">Scan QR ini di Scan Center untuk proses manifest</p>
+            <hr>
+            <small>Asal: <?= $findById($outlets, $manifest['origin_outlet_id'], 'name') ?> → Tujuan: <?= $findById($outlets, $manifest['destination_hub_id'], 'name') ?></small><br>
+            <small>Driver: <?= $manifest['driver_name'] ?? '-' ?> | Kendaraan: <?= $manifest['vehicle_number'] ?? '-' ?> | <?= $manifest['total_shipments'] ?> paket</small>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    win.onload = function() { win.print(); };
+}
+</script>
 <?= $this->endSection() ?>

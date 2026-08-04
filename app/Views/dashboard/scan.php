@@ -68,6 +68,22 @@
                 </div>
             </div>
 
+            <!-- Camera Scanner Panel -->
+            <div class="card mb-3" id="cameraPanel" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background:#1e3a5f;color:#fff;">
+                    <h6 class="mb-0"><i class="bi bi-camera-video me-2"></i>Kamera Scanner</h6>
+                    <button type="button" class="btn btn-sm btn-outline-light" id="btnStopCamera">
+                        <i class="bi bi-x-lg me-1"></i>Tutup
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div id="cameraReader" style="width:100%;"></div>
+                    <div class="text-center py-2" style="background:#f8f9fa;font-size:0.82rem;color:#64748b;">
+                        <i class="bi bi-crosshair me-1"></i>Arahkan kamera ke barcode / QR code
+                    </div>
+                </div>
+            </div>
+
             <!-- Input Scan -->
             <div class="card mb-3">
                 <div class="card-body">
@@ -75,9 +91,11 @@
                         Scan Barcode Manifest
                     </label>
                     <div class="input-group">
-                        <span class="input-group-text" style="background:#1e3a5f;color:#fff;">
-                            <i class="bi bi-upc-scan"></i>
-                        </span>
+                        <button type="button" class="btn" id="btnCameraScan"
+                            style="background:#1e3a5f;color:#fff;border:1px solid #1e3a5f;"
+                            title="Scan pakai kamera">
+                            <i class="bi bi-camera-fill"></i>
+                        </button>
                         <input type="text" id="scanInput" class="form-control form-control-lg"
                             placeholder="Arahkan scanner ke barcode..."
                             autocomplete="off" autofocus>
@@ -87,7 +105,7 @@
                     </div>
                     <small class="text-muted mt-1 d-block">
                         <i class="bi bi-lightning-charge me-1"></i>
-                        Scanner hardware akan otomatis memproses setelah scan.
+                        Scanner hardware otomatis proses setelah scan, atau klik <i class="bi bi-camera-fill"></i> untuk scan via kamera HP.
                     </small>
                 </div>
             </div>
@@ -120,11 +138,16 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- Html5-QRCode Library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 <script>
 $(document).ready(function() {
 
     let currentMode = 'manifest_in';
     let scanCount   = 0;
+    let html5QrCode = null;
+    let cameraActive = false;
 
     const modeInfo = {
         manifest_in:  'Scan barcode manifest untuk mencatat kedatangan paket di outlet ini.',
@@ -140,13 +163,15 @@ $(document).ready(function() {
 
     // Selalu focus ke input scan
     function refocus() {
-        setTimeout(() => $('#scanInput').focus(), 100);
+        if (!cameraActive) {
+            setTimeout(() => $('#scanInput').focus(), 100);
+        }
     }
     refocus();
 
-    // Klik di mana saja → focus ke input
+    // Klik di mana saja → focus ke input (kecuali saat kamera aktif)
     $(document).on('click', function(e) {
-        if (!$(e.target).is('button, select, a')) {
+        if (!$(e.target).is('button, select, a, video, canvas') && !cameraActive) {
             refocus();
         }
     });
@@ -177,6 +202,118 @@ $(document).ready(function() {
 
         refocus();
     });
+
+    // =====================
+    // KAMERA SCANNER
+    // =====================
+
+    // Buka kamera
+    $('#btnCameraScan').on('click', function() {
+        if (cameraActive) {
+            stopCamera();
+            return;
+        }
+        startCamera();
+    });
+
+    // Tutup kamera
+    $('#btnStopCamera').on('click', function() {
+        stopCamera();
+    });
+
+    function startCamera() {
+        $('#cameraPanel').slideDown(200);
+        cameraActive = true;
+
+        // Update icon tombol
+        $('#btnCameraScan').html('<i class="bi bi-camera-video-off-fill"></i>')
+            .attr('title', 'Tutup kamera')
+            .addClass('btn-danger').removeClass('btn-primary');
+
+        html5QrCode = new Html5Qrcode("cameraReader");
+
+        const config = {
+            fps: 10,
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdge * 0.7);
+                return { width: qrboxSize, height: Math.floor(qrboxSize * 0.6) };
+            },
+            aspectRatio: 1.0,
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.QR_CODE,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.CODE_93,
+                Html5QrcodeSupportedFormats.ITF,
+            ],
+        };
+
+        html5QrCode.start(
+            { facingMode: "environment" }, // Gunakan kamera belakang
+            config,
+            onScanSuccess,
+            onScanFailure
+        ).catch(function(err) {
+            console.error("Gagal membuka kamera:", err);
+            addLog({
+                success: false,
+                message: 'Gagal membuka kamera. Pastikan browser memiliki izin akses kamera. ' +
+                         '<br><small class="text-muted">Error: ' + err + '</small>'
+            }, 'CAMERA');
+            stopCamera();
+        });
+    }
+
+    function stopCamera() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(function() {
+                html5QrCode.clear();
+                html5QrCode = null;
+            }).catch(function(err) {
+                console.error("Error stop kamera:", err);
+            });
+        }
+
+        cameraActive = false;
+        $('#cameraPanel').slideUp(200);
+
+        // Kembalikan icon tombol
+        $('#btnCameraScan').html('<i class="bi bi-camera-fill"></i>')
+            .attr('title', 'Scan pakai kamera')
+            .removeClass('btn-danger').addClass('btn-primary');
+
+        refocus();
+    }
+
+    let lastScanTime = 0;
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Debounce: cegah scan berulang dalam 2 detik
+        const now = Date.now();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
+
+        // Feedback visual & audio
+        if (navigator.vibrate) navigator.vibrate(200);
+
+        // Isi input dan langsung proses
+        $('#scanInput').val(decodedText);
+
+        // Stop kamera dulu lalu proses
+        stopCamera();
+        processScan();
+    }
+
+    function onScanFailure(error) {
+        // Tidak perlu apa-apa — ini dipanggil setiap frame yang gagal detect barcode
+    }
+
+    // =====================
+    // PROSES SCAN
+    // =====================
 
     // Proses scan — trigger saat Enter (otomatis dari scanner hardware)
     $('#scanInput').on('keypress', function(e) {
@@ -275,5 +412,32 @@ $(document).ready(function() {
 <style>
 .active-mode { font-weight: 600; }
 @keyframes fadeIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+
+/* Camera scanner styling */
+#cameraReader {
+    border-radius: 0;
+    overflow: hidden;
+}
+#cameraReader video {
+    width: 100% !important;
+    border-radius: 0;
+}
+#cameraReader img[alt="Info icon"] {
+    display: none !important;
+}
+#cameraPanel .card-body {
+    background: #000;
+}
+
+/* Responsif untuk tombol kamera di mobile */
+@media (max-width: 576px) {
+    #btnCameraScan {
+        padding: 0.5rem 0.75rem;
+        font-size: 1.1rem;
+    }
+    #scanInput {
+        font-size: 1rem !important;
+    }
+}
 </style>
 <?= $this->endSection() ?>
